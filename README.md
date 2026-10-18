@@ -1,6 +1,6 @@
 # Birdreports
 
-Projektarbeit im Modul Data Engineering (HS26, ZHAW). Wir untersuchen, wie vollständig Citizen-Science-Plattformen die Brutverbreitung von Vögeln in der Schweiz abbilden, und ob die Landnutzung die Lücken erklärt.
+Projektarbeit im Modul Data Engineering (HS26, ZHAW). Wir untersuchen, wie vollständig Citizen-Science-Plattformen die Brutverbreitung von Vögeln in der Schweiz abbilden, und ob sich die Lücken mit der Landnutzung erklären lassen.
 
 ## Gruppe
 
@@ -12,38 +12,44 @@ Projektarbeit im Modul Data Engineering (HS26, ZHAW). Wir untersuchen, wie volls
 
 ## Fragestellung
 
-Als Referenz dient die Schweizerische Brutvogeldatenbank der Vogelwarte Sempach (Brutnachweise pro Art und 5×5-km-Quadrat). Für jedes Quadrat prüfen wir, ob eBird, iNaturalist und Observation.org die dort brütenden Arten im Zeitraum 2020–2024 während der Brutzeit (April bis Juli) melden. Die Abdeckungsquote eines Quadrats ist der Anteil der Arten mit Brutnachweis, die auf einer Plattform gemeldet sind.
+Als Referenz dient die Schweizerische Brutvogeldatenbank der Vogelwarte Sempach mit Brutnachweisen pro Art und 5×5-km-Quadrat. Für jedes Quadrat prüfen wir, ob eBird, iNaturalist und Observation.org die dort brütenden Arten im Zeitraum 2020–2024 während der Brutzeit (April bis Juli) melden. Die Abdeckungsquote eines Quadrats ist der Anteil der Arten mit Brutnachweis, die auf einer Plattform gemeldet sind.
 
-- **FF1: Landnutzung.** Hängt die Abdeckungsquote eines Quadrats von seiner Landnutzung ab?
-  - H1: Je höher der Siedlungsanteil, desto höher die Abdeckungsquote.
-  - H2: Je höher der Anteil unproduktiver Fläche, desto niedriger die Abdeckungsquote.
-- **FF2: Plattformen.** Unterscheiden sich die Plattformen im Abdeckungsmuster?
-  - H3: Die Abdeckungsquote von iNaturalist hängt stärker vom Siedlungsanteil ab als die von eBird.
+FF1 (Landnutzung): Hängt die Abdeckungsquote eines Quadrats von seiner Landnutzung ab?
 
-Die Konzeption (Problemstellung, Methoden, Lebenszyklus, Limitationen) steht im separaten Dokument «Projektarbeit Teil 1: Konzeption».
+- H1: Je höher der Siedlungsanteil, desto höher die Abdeckungsquote.
+- H2: Je höher der Anteil unproduktiver Fläche, desto niedriger die Abdeckungsquote.
+
+FF2 (Plattformen): Unterscheiden sich die Plattformen im Abdeckungsmuster?
+
+- H3: Die Abdeckungsquote von iNaturalist hängt stärker vom Siedlungsanteil ab als die von eBird.
+
+Problemstellung, Methodik, Lebenszyklus und Limitationen sind im separaten Dokument «Projektarbeit Teil 1: Konzeption» ausgeführt.
 
 ## Datenquellen
 
 | Quelle | Inhalt | Lizenz |
 |---|---|---|
-| eBird Observation Dataset (GBIF) | Beobachtungen, Schweiz, Vögel, 2020–2024 | CC BY 4.0 |
-| Observation.org (GBIF) | Beobachtungen, Schweiz, Vögel, 2020–2024 | CC BY-NC 4.0 |
-| iNaturalist Research-grade Observations (GBIF) | Foto-Belege, Schweiz, Vögel, 2020–2024 | je Beobachtung CC0, CC BY oder CC BY-NC |
-| Swiss National Breeding Bird Databank (Vogelwarte) | Letztes Brutjahr pro Art und 5×5-km-Quadrat, Version 1.1 | CC BY 4.0 |
-| Arealstatistik BFS, Aktueller Stand (CSV) | Landnutzung pro Hektare, Erhebungsjahre 2013–2020 | Quellenangabe, kommerziell nur mit Zustimmung |
+| [EOD – eBird Observation Dataset](https://www.gbif.org/dataset/4fa7b334-ce0d-4e88-aaae-2e0c138d049e), [doi:10.15468/aomfnb](https://doi.org/10.15468/aomfnb) | Beobachtungen, Schweiz, Vögel, 2020–2024 | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| [Observation.org, Nature data from around the World](https://www.gbif.org/dataset/8a863029-f435-446a-821e-275f4f641165), [doi:10.15468/5nilie](https://doi.org/10.15468/5nilie) | Beobachtungen mit Anzahl und Uhrzeit | [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) |
+| [iNaturalist Research-grade Observations](https://www.gbif.org/dataset/50c9509d-22c7-4a22-a47d-8c48425ef4a7), [doi:10.15468/ab3s5x](https://doi.org/10.15468/ab3s5x) | Foto-Belege, Medianungenauigkeit 18 m | Datensatz [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/), einzelne Meldungen CC0 oder CC BY |
+| [Swiss National Breeding Bird Databank](https://www.gbif.org/dataset/63f077c9-96a0-49de-b3ea-2aa565ee1098), Version 1.1, [doi:10.15468/jujcgr](https://doi.org/10.15468/jujcgr) | Letztes Brutjahr pro Art und 5×5-km-Quadrat | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| Arealstatistik des BFS, «Aktueller Stand» ([Erhebung](https://www.bfs.admin.ch/bfs/de/home/statistiken/raum-umwelt/erhebungen/area.html), [Datensatz](https://opendata.swiss/de/dataset/arealstatistik-schweiz)) | Landnutzung pro Hektare, Erhebungsjahre 2013–2020 | Quellenangabe erforderlich, kommerzielle Nutzung nur mit Zustimmung |
 
-**Zitate**
+Die Lizenzangabe für iNaturalist steht auf Datensatzebene; in unserem Auszug verteilen sich die 66'117 Meldungen auf 53'544 unter CC BY-NC 4.0, 11'133 unter CC BY 4.0 und 1'440 unter CC0 1.0. Observation.org und die nichtkommerziell lizenzierten iNaturalist-Meldungen schliessen eine spätere kommerzielle Weiterverwendung aus; für die Studienarbeit ist die Nutzung gedeckt.
 
-- Wechsler S, Volet B, Schmid H (2023). Swiss National Breeding Bird Databank. Version 1.1. Swiss Ornithological Institute. DOI 10.15468/jujcgr.
-- GBIF.org (13 October 2026). GBIF Occurrence Download. https://doi.org/10.15468/dl.9qfxn7 (Download-Key `0024005-260928105237408`).
+### Zitation
+
+- Wechsler, S., Volet, B. & Schmid, H. (2023). *Swiss National Breeding Bird Databank*. Version 1.1. Swiss Ornithological Institute. <https://doi.org/10.15468/jujcgr>
+- GBIF.org (13. Oktober 2026). *GBIF Occurrence Download*. <https://doi.org/10.15468/dl.9qfxn7> (Download-Key `0024005-260928105237408`)
+- Bundesamt für Statistik. *Arealstatistik Schweiz* (Standardnomenklatur NOAS04). <https://www.bfs.admin.ch/bfs/de/home/statistiken/raum-umwelt/erhebungen/area.html> (Abgerufen: 13.10.26)
 
 ## Daten beschaffen
 
-Die Rohdaten liegen **nicht** im Repository (Grösse, GitHub-Limit von 100 MB pro Datei). Sie werden lokal nach `data/` gelegt.
+Die Rohdaten liegen wegen ihrer Grösse und des GitHub-Limits von 100 MB pro Datei nicht im Repository. Sie gehören lokal nach `data/`.
 
-1. **Plattformdaten:** GBIF-Download mit den Filtern Country = Switzerland, Year 2020–2024, Scientific name = Aves, Occurrence status = Present, taxonomische Referenz Catalogue of Life. Er enthält die drei Plattform-Datensätze, dazu 87'741 Zeilen der Vogelwarte-Datenbank (nur Brutjahre ab 2020, als Referenz ungeeignet) und 94 Zeilen aus drei weiteren Datensätzen. Wir verwenden nur die drei Dataset-Keys der Plattformen aus der Tabelle oben. Ablage: `data/0024005-260928105237408.csv` (Tab-getrennt trotz Endung).
-2. **Referenz:** Darwin-Core-Archiv der Brutvogeldatenbank von der Vogelwarte, ohne Jahresfilter. Der Download über GBIF mit Jahresfilter ist ungeeignet, weil `year` dort das letzte Brutjahr ist. Ablage: `data/dwca-soi_aves-v1/` (enthält `occurrence.txt`, `meta.xml`, `eml.xml`). Die Datei enthält 135'310 Datensätze, davon 129'240 in der Schweiz.
-3. **Landnutzung:** Arealstatistik «Aktueller Stand» als CSV von opendata.swiss, Ablage in `data/`.
+1. Plattformdaten: GBIF-Download mit den Filtern Country = Switzerland, Year 2020–2024, Scientific name = Aves, Occurrence status = Present und taxonomischer Referenz Catalogue of Life. Der Export enthält neben den drei Plattform-Datensätzen 87'741 Zeilen der Vogelwarte-Datenbank, die wegen der Jahresfilterung nur Brutjahre ab 2020 abdecken und als Referenz ungeeignet sind, sowie 94 Zeilen aus drei weiteren Datensätzen. Verwendet werden ausschliesslich die drei Dataset-Keys aus der Tabelle oben. Ablage: `data/0024005-260928105237408.csv`, trotz Endung tabulatorgetrennt.
+2. Referenz: Darwin-Core-Archiv der Brutvogeldatenbank direkt von der Vogelwarte, ohne Jahresfilter. Der Bezug über GBIF mit Jahresfilter wäre ungeeignet, weil `year` dort das letzte Brutjahr bezeichnet. Ablage: `data/dwca-soi_aves-v1/` mit `occurrence.txt`, `meta.xml` und `eml.xml`. Das Archiv umfasst 135'310 Datensätze, davon 129'240 in der Schweiz.
+3. Landnutzung: Arealstatistik «Aktueller Stand» als CSV, Ablage in `data/`.
 
 ## Setup
 
@@ -60,19 +66,19 @@ birdreports/
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
+├── docs/
+│   └── lueckenanalyse-teil1.md  # Abgleich mit Bewertungsraster und Vorlesung
 ├── src/
 │   ├── storage_test.py          # Storage-Evaluation DuckDB gegen SQLite
 │   ├── profile_data.py          # initiale Analyse der Datengrundlage (misst nur)
 │   ├── build_analysis_table.py  # Bereinigung und Analysetabelle pro Quadrat
 │   └── hypothesis_tests.py      # Hypothesentests H1 bis H3
 ├── mappings/
-│   └── taxon_mapping.csv # Artnamen Vogelwarte gegen Catalogue of Life
-├── build_out/            # bereinigte Tabellen, Analysetabelle, Analysedatenbank
-├── analysis_out/         # Ergebnisse der Hypothesentests
-└── data/                 # lokal, nicht versioniert
+│   └── taxon_mapping.csv        # Artnamen Vogelwarte gegen Catalogue of Life
+├── build_out/                   # bereinigte Tabellen, Analysetabelle, Analysedatenbank
+├── analysis_out/                # Ergebnisse der Hypothesentests
+└── data/                        # lokal, nicht versioniert
 ```
-
-Die Struktur wächst mit den Schritten unten.
 
 ## Pipeline
 
@@ -82,8 +88,7 @@ python src/build_analysis_table.py AREAL.csv PLATTFORM.csv VOGELWARTE/occurrence
 python src/hypothesis_tests.py     build_out/analyse_quadrate.parquet
 ```
 
-`build_analysis_table.py` bereinigt die drei Quellen nach den Regeln der Konzeption und
-schreibt nach `build_out/`:
+`build_analysis_table.py` bereinigt die drei Quellen nach den Regeln der Konzeption und schreibt nach `build_out/`:
 
 | Datei | Inhalt |
 |---|---|
@@ -94,8 +99,7 @@ schreibt nach `build_out/`:
 | `birdreports.duckdb` | Analysedatenbank mit allen vier Tabellen (18,9 MB) |
 | `build_log.json` | Parameter, Eingabepfade und Zeilenzahlen des Laufs |
 
-Die Beobachterkennung wird mit einem festen Salt (BLAKE2s, 8 Byte) gehasht, bevor
-irgendetwas geschrieben wird; `recordedBy` verlässt das Skript nicht im Klartext.
+Die Beobachterkennung wird mit einem festen Salt gehasht (BLAKE2s, 8 Byte), bevor irgendetwas geschrieben wird; `recordedBy` verlässt das Skript nicht im Klartext.
 
 ## Lieferumfang Teil 1 und Stand
 
@@ -104,21 +108,18 @@ irgendetwas geschrieben wird; `recordedBy` verlässt das Skript nicht im Klartex
 - [x] Ingestion: Arealstatistik (Variablenbeschreibung geprüft, 4'129'071 Hektaren)
 - [x] Storage: Evaluation und Wahl der Speicherumgebung (DuckDB mit Parquet)
 - [x] Transformation Teil 1: initiale Analyse (`profile_data.py`) und Bereinigung (`build_analysis_table.py`)
-- [x] Hypothesentests H1–H3 (`hypothesis_tests.py`)
+- [x] Hypothesentests H1 bis H3 (`hypothesis_tests.py`)
 - [ ] Beantwortung der Forschungsfragen im Notebook, mit Quellenangaben
 - [ ] Sensitivitätsanalysen (10-km-Meldungen, Brutzeitgrenzen, Randquadrate)
 - [ ] Tests für die Transformationsschritte
 - [ ] Download-Skript mit DOI und Datum im Log
 - [ ] Präsentation
 
-Der offene Stand und die Lücken gegenüber dem Bewertungsraster stehen in
-[docs/lueckenanalyse-teil1.md](docs/lueckenanalyse-teil1.md).
+Die Lücken gegenüber dem Bewertungsraster sind in [docs/lueckenanalyse-teil1.md](docs/lueckenanalyse-teil1.md) dokumentiert.
 
 ## Ergebnisse der Hypothesentests
 
-Grundlage: 1'637 Quadrate der Hauptanalyse (Randquadrate unter 1'000 ha und Quadrate ohne
-Brutnachweis ausgeschlossen) mit 127'269 Art/Quadrat-Paaren. Mittlere Abdeckungsquote je
-Quadrat: eBird 30,5 %, iNaturalist 4,7 %, Observation.org 4,2 %, alle drei zusammen 33,0 %.
+Grundlage sind 1'637 Quadrate der Hauptanalyse, also ohne Randquadrate unter 1'000 ha und ohne Quadrate ohne Brutnachweis, mit insgesamt 127'269 Art/Quadrat-Paaren. Die mittlere Abdeckungsquote je Quadrat beträgt 30,5 % für eBird, 4,7 % für iNaturalist, 4,2 % für Observation.org und 33,0 % für alle drei Plattformen zusammen.
 
 | Hypothese | Test | Effektstärke [95 %-KI] | p (Holm) | Ergebnis |
 |---|---|---|---|---|
@@ -126,29 +127,17 @@ Quadrat: eBird 30,5 %, iNaturalist 4,7 %, Observation.org 4,2 %, alle drei zusam
 | H2 unproduktiv ↑ → Abdeckung ↓ | Spearman | rho = −0,026 [−0,077; 0,026] | 0,296 | nicht gestützt |
 | H3 iNaturalist hängt stärker von Siedlung ab als eBird | Interaktionsterm | +0,205 [0,141; 0,270] | 8,0e-10 | gestützt |
 
-Zwei Befunde brauchen eine Einordnung in der Präsentation:
+Die Kontrolle des Beobachtungsaufwands verändert das Bild erheblich. Die Zahl der Meldungen je Quadrat korreliert zu rho = 0,95 mit der Abdeckungsquote, und das R² steigt von 0,140 im Modell mit Landnutzung allein auf 0,882, sobald der Aufwand hinzukommt. Der Koeffizient des Siedlungsanteils fällt dabei von +1,07 auf −0,056 [−0,112; −0,000]. Die Landnutzung wirkt also überwiegend über den Aufwand. Modell 2 widerlegt H1 damit nicht, sondern weist den Aufwand als Mediator aus; berichtet werden beide Modelle.
 
-- **Der Beobachtungsaufwand erklärt die Abdeckung fast vollständig.** Die Zahl der Meldungen
-  je Quadrat korreliert mit rho = 0,95 mit der Abdeckungsquote; das R² steigt von 0,140
-  (nur Landnutzung) auf 0,882, sobald der Aufwand als Kontrolle dazukommt. Der Koeffizient
-  des Siedlungsanteils fällt dabei von +1,07 auf −0,056 [−0,112; −0,000]. Die Landnutzung
-  wirkt also weitgehend **über** den Aufwand. Modell 2 widerlegt H1 nicht, es zeigt, dass der
-  Aufwand der Mediator ist — beide Modelle werden berichtet.
-- **H2 kehrt unter Kontrolle sogar das Vorzeichen um** (+0,097 [0,073; 0,120]): Bei gleichem
-  Aufwand ist die Abdeckung in unproduktiven Quadraten leicht höher, vermutlich weil dort
-  weniger Arten brüten und die wenigen Arten eher erfasst werden.
+H2 kehrt unter Kontrolle des Aufwands sogar das Vorzeichen um (+0,097 [0,073; 0,120]). Bei gleichem Aufwand ist die Abdeckung in unproduktiven Quadraten leicht höher, vermutlich weil dort weniger Arten brüten und die wenigen vorkommenden Arten eher erfasst werden.
 
-Einzelne Steigungen des Siedlungsanteils je Plattform (eigene Modelle, HC3): eBird −0,101
-[−0,154; −0,047], iNaturalist +0,105 [0,053; 0,156], Observation.org −0,002 [−0,036; 0,031].
+Die Steigung des Siedlungsanteils je Plattform, aus getrennten Modellen mit HC3-Standardfehlern: eBird −0,101 [−0,154; −0,047], iNaturalist +0,105 [0,053; 0,156], Observation.org −0,002 [−0,036; 0,031].
 
-**Räumliche Autokorrelation:** Moran's I der Residuen von Modell 2 beträgt 0,161
-(Permutationstest, 999 Permutationen, p = 0,001; Rook-Nachbarschaft auf dem 5-km-Raster).
-Benachbarte Quadrate sind also nicht unabhängig, die p-Werte sind entsprechend vorsichtig zu
-lesen. Das ist die in der Konzeption angekündigte Limitation; sie tritt ein.
+Moran's I der Residuen von Modell 2 beträgt 0,161 (Permutationstest mit 999 Permutationen, p = 0,001, Rook-Nachbarschaft auf dem 5-km-Raster). Benachbarte Quadrate sind demnach nicht unabhängig, womit die in der Konzeption angekündigte räumliche Autokorrelation tatsächlich auftritt und die p-Werte entsprechend vorsichtig zu interpretieren sind.
 
 ## Storage
 
-Die Analysedatenbank ist DuckDB, die bereinigten Rohdaten liegen als Parquet vor. Das Skript `src/storage_test.py` vergleicht DuckDB mit SQLite auf den Projektdaten (Einzelmessung, ein Rechner). Ergebnis:
+Die Analysedatenbank ist DuckDB, die bereinigten Rohdaten liegen als Parquet vor. `src/storage_test.py` vergleicht DuckDB mit SQLite auf den Projektdaten; es handelt sich um eine Einzelmessung auf einem Rechner.
 
 | | DuckDB | SQLite |
 |---|---|---|
@@ -158,10 +147,10 @@ Die Analysedatenbank ist DuckDB, die bereinigten Rohdaten liegen als Parquet vor
 | Zählung nach Datensatz, Jahr und Monat | 0,01 s | 1,01 s |
 | Dateigrösse der Datenbank | 46,9 MB | 272,9 MB |
 
-Die Plattformdaten als Parquet (neun Spalten) umfassen 26,5 MB. PostgreSQL/PostGIS wurde nicht gemessen: Es braucht einen Server, und räumliche Funktionen sind nicht nötig, weil die Quadrate aus den LV95-Koordinaten berechnet werden.
+Die Plattformdaten umfassen als Parquet mit neun Spalten 26,5 MB. PostgreSQL mit PostGIS haben wir nicht gemessen, weil es einen Server voraussetzt und räumliche Funktionen entbehrlich sind: Die Quadrate werden aus den LV95-Koordinaten gerechnet.
 
 ## Hinweise zu den Daten
 
-- Die Brutvogeldatenbank enthält pro Art und Quadrat nur das letzte Brutjahr und beruht vor allem auf validierten ornitho.ch-Meldungen. Sie ist keine unabhängige Erhebung.
-- Namen in der Referenz und in den Plattformdaten weichen bei 17 von 213 Arten ab (Gattungsumbenennungen). Die Zuordnung wird in einer Tabelle im Repository festgehalten.
-- Beobachter-Kennungen werden vor dem Speichern gehasht, es liegen keine Klarnamen im Repository.
+- Die Brutvogeldatenbank führt pro Art und Quadrat nur das letzte Brutjahr und stützt sich vor allem auf validierte Meldungen von [ornitho.ch](https://www.ornitho.ch) sowie auf Monitoringprogramme. Sie ist keine unabhängige Erhebung.
+- Die Artnamen der Referenz weichen bei 17 von 213 Arten von denen der Plattformdaten ab, überwiegend wegen Gattungsumbenennungen. Für 16 dieser Arten existiert ein Gegenname in den Plattformdaten; für *Ficedula parva* liegt im Zeitraum keine Meldung vor. Die Zuordnung ist in [`mappings/taxon_mapping.csv`](mappings/taxon_mapping.csv) mit Begründung je Zeile festgehalten.
+- Beobachterkennungen werden vor dem Speichern gehasht; Klarnamen liegen nicht im Repository.
