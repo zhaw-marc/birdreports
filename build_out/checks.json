@@ -1,0 +1,197 @@
+{
+ "build_dir": "build_out",
+ "parameters": {
+  "grid_size_m": 5000,
+  "years": [
+   2020,
+   2024
+  ],
+  "breeding_months": [
+   4,
+   7
+  ],
+  "min_hectares": 1000,
+  "excluded_uncertainty_m": 7070,
+  "min_breeding_year": 2020,
+  "max_uncertainty_inaturalist_m": 2500
+ },
+ "checks": [
+  {
+   "check": "platform: accepted_values platform",
+   "passed": true,
+   "detail": "['ebird', 'inaturalist', 'observation_org']"
+  },
+  {
+   "check": "platform: not_null species, cell_id",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "platform: Jahr 2020-2024",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "platform: Monat 4-7 (Brutzeit)",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "platform: iNaturalist hoechstens 2500 m Ungenauigkeit",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "platform: keine Klarnamen (recordedBy entfernt)",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "platform: Beobachter-Hash hat 16 Hex-Zeichen",
+   "passed": true,
+   "detail": "603,123 Hashes"
+  },
+  {
+   "check": "platform: cell_id passt zu den LV95-Koordinaten",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "reference: unique (species, cell_id)",
+   "passed": true,
+   "detail": "129,240 Paare"
+  },
+  {
+   "check": "reference: not_null species, cell_id, last_breeding_year",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "reference: letztes Brutjahr plausibel (1900 bis 2026)",
+   "passed": true,
+   "detail": "1990-2023"
+  },
+  {
+   "check": "landuse: unique cell_id",
+   "passed": true,
+   "detail": "1,839 Quadrate"
+  },
+  {
+   "check": "landuse: 1 bis 2500 Hektaren je Quadrat",
+   "passed": true,
+   "detail": "max 2500"
+  },
+  {
+   "check": "landuse: Anteile summieren sich auf 1",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "landuse: Hektaren der Klassen ergeben die Gesamtflaeche",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "analysis: unique cell_id",
+   "passed": true,
+   "detail": "1,839 Quadrate"
+  },
+  {
+   "check": "analysis: cell_id aus e_min/n_min rekonstruierbar",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "analysis: hits_ebird <= reference_species",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "analysis: coverage_ebird in [0, 1], leer ohne Referenzart",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "analysis: hits_inaturalist <= reference_species",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "analysis: coverage_inaturalist in [0, 1], leer ohne Referenzart",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "analysis: hits_observation_org <= reference_species",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "analysis: coverage_observation_org in [0, 1], leer ohne Referenzart",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "analysis: hits_any <= reference_species",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "analysis: coverage_any in [0, 1], leer ohne Referenzart",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "analysis: max(hits je Plattform) <= hits_any <= Summe",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "analysis: records_<plattform> summieren sich zu records",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "analysis: in_main_analysis = kein Randquadrat und mindestens eine Referenzart",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "analysis: Zahl der Quadrate wie im build_log",
+   "passed": true,
+   "detail": "1,614"
+  },
+  {
+   "check": "analysis: Referenzpaare wie im build_log",
+   "passed": true,
+   "detail": "86,530"
+  },
+  {
+   "check": "relationships: Quadrate der Analysetabelle = Quadrate der Landnutzung",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "relationships: reference_species aus reference_clean nachgezaehlt",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "relationships: hits_ebird aus platform_clean nachgezaehlt",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "relationships: hits_inaturalist aus platform_clean nachgezaehlt",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "relationships: hits_observation_org aus platform_clean nachgezaehlt",
+   "passed": true,
+   "detail": ""
+  }
+ ],
+ "passed": 35,
+ "failed": 0
+}

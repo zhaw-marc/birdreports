@@ -12,7 +12,9 @@ Vorgehen wie in der Konzeption festgelegt: Spearman-Korrelation einzeln fuer H1 
 multiple Regression mit Landwirtschaft als Referenzklasse und dem Beobachtungsaufwand
 als Kontrollvariable, Interaktionsterm fuer H3, Holm-Korrektur ueber die drei primaeren
 Tests, Effektstaerken mit 95-Prozent-Konfidenzintervallen, und Moran's I auf den
-Residuen zur Pruefung der raeumlichen Autokorrelation.
+Residuen zur Pruefung der raeumlichen Autokorrelation. Fuer H3 wird zusaetzlich geprueft,
+wie stark das Ergebnis von der Modellspezifikation abhaengt (ohne Aufwand, mit gemeinsamem
+Aufwandskoeffizienten, rangbasiert je Plattform).
 
 Bezeichner und Spaltennamen sind englisch, Kommentare und die Titel der Ausgabetabellen
 deutsch.
@@ -34,7 +36,9 @@ Quellen:
     Scandinavian Journal of Statistics, 6(2), 65-70.
   Bonett, D. G. & Wright, T. A. (2000). Sample size requirements for estimating
     Pearson, Kendall and Spearman correlations. Psychometrika, 65, 23-28.
-    (Standardfehler 1.06/sqrt(n-3) fuer das Konfidenzintervall von Spearmans rho.)
+    (Varianz (1 + rho^2/2)/(n-3) der Fisher-z-Transformation von Spearmans rho fuer das
+    Konfidenzintervall; die aeltere Naeherung 1.06/(n-3) stammt von Fieller, Hartley &
+    Pearson, 1957.)
   Moran, P. A. P. (1950). Notes on continuous stochastic phenomena. Biometrika, 37, 17-23.
   Permutationstest fuer Moran's I nach Anselin, L. (1995). Local indicators of spatial
     association - LISA. Geographical Analysis, 27(2), 93-115.
@@ -70,7 +74,7 @@ def spearman(x, y):
     """Spearmans rho mit 95-Prozent-Konfidenzintervall ueber die Fisher-z-Transformation."""
     rho, p = stats.spearmanr(x, y)
     n = len(x)
-    se = 1.06 / np.sqrt(n - 3)                       # Bonett & Wright (2000)
+    se = np.sqrt((1 + rho ** 2 / 2) / (n - 3))       # Bonett & Wright (2000)
     z = np.arctanh(rho)
     low, high = np.tanh(z - 1.96 * se), np.tanh(z + 1.96 * se)
     return {"rho": round(float(rho), 3), "ci_low": round(float(low), 3),
@@ -215,6 +219,36 @@ for name in ["ebird", "inaturalist", "observation_org"]:
                       "R2": round(model_p.rsquared, 3)}
 show("Steigung des Siedlungsanteils je Plattform (eigene Modelle, HC3)", pd.DataFrame(separate).T)
 
+# ---------------- H3: Robustheit gegenueber der Spezifikation ----------------
+# Modell 3 ist der primaere Test. Das Ergebnis haengt aber an zwei Entscheiden: dass der
+# Aufwand kontrolliert wird und dass er je Plattform unterschiedlich wirken darf. Die
+# Varianten zeigen, was ohne diese Entscheide herauskommt. Dazu kommt ein rangbasierter
+# Vergleich, der vom unterschiedlichen Niveau der Abdeckung (eBird rund 37 %, iNaturalist
+# rund 5 %) nicht beeinflusst wird.
+variants = {
+    "A: Plattform x Landnutzung und Aufwand (primaer, Modell 3)": model_3,
+    "B: Aufwand mit gemeinsamem Koeffizienten": smf.ols(
+        "coverage ~ platform * (share_settlement + share_wooded + share_unproductive)"
+        " + log_records_platform + log_observers_platform", data=long
+    ).fit(cov_type="cluster", cov_kwds={"groups": long.cell_id}),
+    "C: ohne Kontrolle des Aufwands": smf.ols(
+        "coverage ~ platform * (share_settlement + share_wooded + share_unproductive)", data=long
+    ).fit(cov_type="cluster", cov_kwds={"groups": long.cell_id}),
+}
+robustness = {}
+for label, model_v in variants.items():
+    ci = model_v.conf_int().loc[term]
+    robustness[label] = {"interaction": round(float(model_v.params[term]), 4),
+                         "ci_low": round(float(ci[0]), 4), "ci_high": round(float(ci[1]), 4),
+                         "p": float(model_v.pvalues[term])}
+show("H3 Robustheit: Interaktionsterm je Spezifikation (geclustert nach Quadrat)",
+     pd.DataFrame(robustness).T)
+rank_by_platform = {name: spearman(cells.share_settlement, cells[f"coverage_{name}"])
+                    for name in ["ebird", "inaturalist", "observation_org"]}
+show("H3 Robustheit: Spearman Siedlungsanteil gegen Abdeckung je Plattform (ohne Kontrolle)",
+     pd.DataFrame(rank_by_platform).T)
+h3_robust = all(v["interaction"] > 0 and v["p"] < ALPHA for v in robustness.values())
+
 # ---------------- Holm-Korrektur ueber die drei primaeren Tests ----------------
 raw_p = {"H1 (Spearman Siedlung)": h1["p"], "H2 (Spearman unproduktiv)": h2["p"],
          "H3 (Interaktion)": h3["p"]}
@@ -257,7 +291,10 @@ answer = {
                                  f"{model_2.rsquared:.3f}). Die Landnutzung wirkt damit "
                                  "weitgehend ueber den Aufwand. Modell 2 schaetzt den Rest nach "
                                  "Herausrechnen des Aufwands und ist nicht als Widerlegung von "
-                                 "H1 zu lesen, sondern als Hinweis auf einen Mediator.",
+                                 "H1 zu lesen. Das Muster ist mit einer Vermittlung ueber den "
+                                 "Aufwand vereinbar; mit Querschnittsdaten laesst sich das "
+                                 "nicht von einer gemeinsamen Ursache wie der Erreichbarkeit "
+                                 "unterscheiden.",
     },
     "FF2 (Plattformen)": {
         "H3 Interaktion": f"{h3['coefficient']:.3f} [{h3['ci_low']:.3f}, {h3['ci_high']:.3f}], "
@@ -265,6 +302,16 @@ answer = {
                           "Differenz der Siedlungssteigung (iNaturalist minus eBird); positiv "
                           "stuetzt H3.",
         "H3 gestuetzt": bool(adjusted_p["H3 (Interaktion)"] < ALPHA and h3["coefficient"] > 0),
+        "H3 robust gegenueber der Spezifikation": h3_robust,
+        "Robustheit": "Interaktion je Spezifikation: "
+                      + "; ".join(f"{k.split(':')[0]} {v['interaction']:+.3f} "
+                                  f"[{v['ci_low']:.3f}, {v['ci_high']:.3f}]"
+                                  for k, v in robustness.items())
+                      + ". Spearman Siedlung gegen Abdeckung: "
+                      + ", ".join(f"{k} {v['rho']}" for k, v in rank_by_platform.items())
+                      + ". Gestuetzt ist H3 nur, wenn der Aufwand je Plattform kontrolliert "
+                        "wird; ohne diese Kontrolle haengt eBird absolut staerker am "
+                        "Siedlungsanteil, rangbasiert sind beide etwa gleich.",
         "Steigungen einzeln": {k: v["slope_settlement"] for k, v in separate.items()},
     },
     "Modellgrenze": "Die Abdeckungsquote ist ein Anteil, bei iNaturalist und Observation.org "

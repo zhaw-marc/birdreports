@@ -1,4 +1,4 @@
-"""Serving: Notebook zur Projektarbeit Teil 1 (Data Engineering HS26, ZHAW).
+"""Ergebnis-Notebook zur Projektarbeit Teil 1 (Data Engineering HS26, ZHAW).
 
 Das Notebook liest die gespeicherten Ergebnisse der Pipeline (build_out/, analysis_out/,
 profile_out/, storage_test_out/, ingest_out/) und stellt Konzeption, Lebenszyklus,
@@ -32,12 +32,13 @@ def _():
     import re
     from pathlib import Path
 
+    import duckdb
     import marimo as mo
     import matplotlib.pyplot as plt
     import numpy as np
     import pandas as pd
 
-    return Path, json, mo, np, pd, plt, re
+    return Path, duckdb, json, mo, np, pd, plt, re
 
 
 @app.cell
@@ -89,9 +90,11 @@ def _(mo):
 
     **Data Engineering HS26, Projektarbeit Teil 1** · Marc Vogelmann, Muriele Stermcnik, Alen Rama
 
-    Dieses Notebook ist das Serving-Artefakt von Teil 1. Es folgt dem Data-Engineering-Lebenszyklus
-    nach Reis & Housley (2022) und liest die gespeicherten Ergebnisse der Pipeline. Der Code der
-    Pipeline liegt in `src/`, die Befehle stehen im README.
+    Dieses Notebook bündelt die Ergebnisse von Teil 1. Es folgt dem Data-Engineering-Lebenszyklus
+    nach Reis & Housley (2022) und liest die gespeicherten Ergebnisse der Pipeline. Die
+    Hypothesentests gehören nach der Aufgabenstellung zur Transformation Teil 1; die Phase
+    Serving im engeren Sinn (Option B, Machine Learning) folgt in Teil 2. Der Code der Pipeline
+    liegt in `src/`, ausgeführt wird sie mit `./run_all.sh` (siehe README).
 
     1. Konzeptionalisierung
     2. Entwurf des Lebenszyklus
@@ -160,9 +163,30 @@ def _(ROOT, mo, re):
         nicht aktuell gehalten werden, und begrenzen das Risiko durch Rohdaten mit Abrufdatum,
         DOI und Prüfsumme. Ein Streaming- oder Lambda-Aufbau wäre bei einem einmaligen Batch mit
         rund 600'000 Meldungen nicht begründbar. Die Daten sind begrenzt (bounded) und kommen per
-        Pull; wir laden zuerst und transformieren danach (ELT), damit die Rohdaten für die
-        Prüfung unverändert bleiben. Der Entscheid ist umkehrbar, weil jede Schicht aus der
-        vorherigen neu berechnet werden kann.
+        Pull als Batch.
+
+        **ETL, nicht ELT.** Die Rohdaten bleiben unverändert als Dateien in `data/`. DuckDB liest
+        sie und filtert schon beim Lesen per SQL (Datensatz, Jahr, Brutzeit). Raster, Artabgleich
+        und Hashing laufen danach in Python (pandas, pyproj für die Umrechnung nach LV95), und
+        erst die bereinigten Tabellen werden nach Parquet und in die DuckDB-Datei geschrieben.
+        Transformiert wird also vor dem Laden in die Analysedatenbank. Bei dieser Datenmenge ist
+        das unproblematisch; bei deutlich mehr Daten würden wir die Aggregation in DuckDB-SQL
+        verlagern (siehe Skalierbarkeit). Der Entscheid ist umkehrbar (Zweiweg-Tür), weil jede
+        Schicht aus den Rohdaten neu berechnet werden kann.
+
+        **Orchestrierung und DataOps.** `run_all.sh` führt alle Schritte in fester Reihenfolge aus
+        und bricht ab, sobald eine Datenprüfung (`src/check_outputs.py`) fehlschlägt.
+
+        **Skalierbarkeit je Phase.** Heute: rund 600'000 bereinigte Meldungen, 1'839 Quadrate,
+        alles auf einem Laptop in wenigen Minuten. Was bei 10-mal mehr Daten (weitere Jahre,
+        Nachbarländer) oder einem 1-km-Raster (25-mal mehr Quadrate) passiert:
+
+        | Phase | trägt heute | Grenze | nächster Schritt |
+        |---|---|---|---|
+        | Ingestion | ein GBIF-Download, 1,6 Mio. Zeilen | Search-API höchstens 100'000 Treffer pro Abfrage | GBIF-Download ist asynchron und skaliert; Fallback bereits nach Datensatz, Jahr und Monat aufgeteilt |
+        | Storage | Parquet und DuckDB auf einem Rechner | ein Schreiber, Rechner-Festplatte | Parquet nach Jahr und Datensatz partitionieren; DuckDB verarbeitet auch Daten grösser als der Arbeitsspeicher |
+        | Transformation | pandas im Arbeitsspeicher | RAM bei mehreren Millionen Meldungen | Raster und Aggregation in DuckDB-SQL statt pandas |
+        | Analyse | 1'614 Quadrate | Moran's-I-Permutationen wachsen mit der Zahl der Quadrate | dünn besetzte Gewichtsmatrix ist bereits umgesetzt; bei 1 km trägt das noch |
 
         Das Diagramm stammt aus dem README, damit es nur an einer Stelle gepflegt wird.
         """),
@@ -214,23 +238,79 @@ def _(mo, pd, storage):
         mo.md(r"""
         ## 4. Storage
 
-        **Einordnung.** Die Daten sind tabellarisch und werden über das Raster verknüpft und
-        aggregiert (Joins, Gruppierungen, Anteile). Das spricht für das relationale Modell;
-        Dokumenten-, Graph- und Zeitreihenmodelle brächten bei flachen Meldungen keinen Gewinn.
-        Nach der Vorlesung handelt es sich um dateibasierte Speicherung (File Storage). Sharding,
-        Replikation und CAP spielen keine Rolle, weil alles auf einem Rechner im Batch läuft.
+        **Anforderungen.** Die Daten sind tabellarisch und werden über das Raster verknüpft und
+        aggregiert (Joins, Gruppierungen, Anteile). Es gibt einen Schreiber (die Pipeline), keine
+        gleichzeitigen Zugriffe und keine Aktualisierung einzelner Zeilen; gelesen wird spaltenweise
+        über viele Zeilen. Daraus folgen die Kriterien der Evaluation:
 
-        **Entscheid.** DuckDB als Analysedatenbank, Parquet für die bereinigten Tabellen. Wir
-        priorisieren Einfachheit und Reproduzierbarkeit, akzeptieren dafür, dass die Lösung weder
-        mehrere gleichzeitige Schreiber noch deutlich grössere Datenmengen trägt, und begrenzen das
-        Risiko durch unveränderte Rohdaten, aus denen sich die Datenbank neu aufbauen lässt.
+        | Kriterium | Anforderung im Projekt | DuckDB + Parquet | SQLite | PostgreSQL/PostGIS |
+        |---|---|---|---|---|
+        | Datenmodell | relational, Aggregation über Spalten | spaltenorientiert (OLAP) | zeilenorientiert (OLTP) | zeilenorientiert, Erweiterungen möglich |
+        | Betrieb | ohne Server, im Repo reproduzierbar | eingebettet, eine Datei | eingebettet, eine Datei | Server nötig |
+        | Transaktionen (ACID) | nicht nötig, ein Schreiber im Batch | vorhanden | vorhanden | vorhanden |
+        | Verteilung (CAP) | nicht relevant, ein Rechner | – | – | Replikation möglich |
+        | Raumfunktionen | nicht nötig, Raster aus LV95-Koordinaten | Erweiterung «spatial» | SpatiaLite | PostGIS |
+        | Austauschformat | Tabellen für Notebook und Tests | Parquet ist offen und typisiert | eigenes Dateiformat | Export nötig |
 
-        **Messung** (`src/storage_test.py`, Einzelmessung auf einem Rechner). PostgreSQL mit PostGIS
-        haben wir nicht gemessen, es braucht einen Server und wir brauchen keine Raumfunktionen,
-        weil die Quadrate aus den LV95-Koordinaten gerechnet werden. Die SQLite-Datei läge mit
-        273 MB über der GitHub-Grenze von 100 MB pro Datei.
+        Dokumenten-, Graph- und Zeitreihenmodelle brächten bei flachen Meldungen keinen Gewinn; die
+        Referenz hat nicht einmal einen Zeitverlauf. Nach der Vorlesung handelt es sich um
+        dateibasierte Speicherung (File Storage).
+
+        **Entscheid und Rollen.** Parquet ist die Ablage der bereinigten Tabellen: Notebook,
+        Prüfungen und Hypothesentests lesen von dort. DuckDB ist die Abfrage-Engine: Sie liest die
+        Roh-CSV in der Bereinigung, und `build_out/birdreports.duckdb` bündelt alle vier Tabellen
+        für Ad-hoc-SQL (Beispiel unten). Wir priorisieren Einfachheit und Reproduzierbarkeit,
+        akzeptieren dafür, dass die Lösung weder mehrere gleichzeitige Schreiber noch beliebig
+        grosse Datenmengen trägt, und begrenzen das Risiko durch unveränderte Rohdaten, aus denen
+        sich jede Tabelle neu aufbauen lässt. PostgreSQL haben wir aufgrund der Kriterien nicht
+        gemessen: Ein Server bringt hier Betriebsaufwand ohne Nutzen.
+
+        **Messung** (`src/storage_test.py`). Die Tabelle zeigt eine Einzelmessung auf einem
+        Rechner, ohne Wiederholung. Die Ladezeiten sind nur bedingt vergleichbar: DuckDB liest
+        die CSV mit dem eigenen Leser, SQLite wird über pandas in Blöcken befüllt. Aussagekräftig
+        sind die Abfragezeiten und die Dateigrösse; der Abstand bei den Aggregationen (Faktor
+        rund 100) ist so gross, dass er auch bei wiederholter Messung bestehen bliebe. Er
+        entspricht dem, was man von spaltenorientierter gegenüber zeilenorientierter Speicherung
+        erwartet.
         """),
         mo.ui.table(storage_table, selection=None),
+    ])
+    return
+
+
+@app.cell
+def _(ROOT, build_log, duckdb, mo):
+    _db = ROOT / "build_out" / "birdreports.duckdb"
+    _min_year = build_log["parameters"]["min_breeding_year"]
+    _sql = f"""
+        SELECT r.species AS art,
+               COUNT(*) AS quadrate_mit_brutnachweis,
+               SUM(CASE WHEN p.species IS NOT NULL THEN 1 ELSE 0 END) AS davon_gemeldet,
+               ROUND(100.0 * SUM(CASE WHEN p.species IS NOT NULL THEN 1 ELSE 0 END)
+                     / COUNT(*), 1) AS abdeckung_prozent
+        FROM reference_clean AS r
+        JOIN analysis_cells AS a ON a.cell_id = r.cell_id AND a.in_main_analysis
+        LEFT JOIN (SELECT DISTINCT species, cell_id FROM platform_clean) AS p
+               ON p.species = r.species AND p.cell_id = r.cell_id
+        WHERE NOT r.ten_km AND r.last_breeding_year >= {_min_year}
+        GROUP BY r.species
+        HAVING COUNT(*) >= 100
+        ORDER BY abdeckung_prozent
+        LIMIT 12
+    """
+    with duckdb.connect(str(_db), read_only=True) as _con:
+        missed_species = _con.execute(_sql).df()
+    mo.vstack([
+        mo.md(rf"""
+        **Abfrage auf der Analysedatenbank.** Welche Arten fehlen auf den Plattformen am häufigsten,
+        obwohl sie im Quadrat brüten? Berücksichtigt sind Arten mit mindestens 100 Quadraten in der
+        Hauptanalyse (letztes Brutjahr ab {_min_year}, alle drei Plattformen zusammen).
+
+        ```sql
+        {_sql.strip()}
+        ```
+        """),
+        mo.ui.table(missed_species, selection=None),
     ])
     return
 
@@ -306,6 +386,13 @@ def _(build_log, mo, pd):
         - **Analysetabelle:** eine Zeile pro Quadrat mit Landnutzungsanteilen, Referenzarten,
           Treffern und Abdeckungsquote je Plattform sowie dem Beobachtungsaufwand (Meldungen und
           Beobachter) als Ersatzmass.
+
+        **Prüfungen.** `src/check_outputs.py` prüft die Tabellen nach jedem Lauf nach dem Muster
+        der dbt-Datentests: Eindeutigkeit der Art/Quadrat-Paare, erlaubte Werte (Plattform,
+        Brutmonate, Ungenauigkeit), Anteile summieren sich auf 1, Abdeckung zwischen 0 und 1,
+        keine Klarnamen, und die Treffer der Analysetabelle lassen sich aus den bereinigten
+        Tabellen nachzählen. Schlägt eine Prüfung fehl, bricht `run_all.sh` ab; das Protokoll
+        steht in `build_out/checks.json`.
         """),
         mo.ui.table(cleaning_table, selection=None),
     ])
@@ -401,7 +488,8 @@ def _(as_frame, main_cells, mo, plt, res_main):
         ### 6.1 H1 und H2: Spearman-Korrelation
 
         Die rangbasierte Korrelation braucht keine Annahme über die Verteilung und ist für Anteile
-        nahe 0 geeignet. Das Konfidenzintervall folgt Bonett & Wright (2000).
+        nahe 0 geeignet. Das Konfidenzintervall nutzt die Fisher-z-Transformation mit der Varianz
+        (1 + rho²/2)/(n − 3) nach Bonett & Wright (2000).
 
         | | rho | 95 %-KI | n |
         |---|---|---|---|
@@ -441,10 +529,13 @@ def _(as_frame, mo, res_main):
         """),
         mo.ui.table(_m2.round(4).reset_index(names="Term"), selection=None),
         mo.md(r"""
-        Mit der Kontrolle verschwindet der Effekt des Siedlungsanteils. Die Landnutzung wirkt also
-        überwiegend über den Aufwand: Wo mehr Menschen wohnen, wird mehr gemeldet, und mehr
-        Meldungen decken mehr Arten ab. Das widerlegt H1 nicht, sondern weist den Aufwand als
-        Mediator aus. Beide Modelle werden berichtet.
+        Mit der Kontrolle verschwindet der Effekt des Siedlungsanteils. Das Muster ist damit
+        vereinbar, dass die Landnutzung über den Aufwand wirkt: Wo mehr Menschen wohnen, wird mehr
+        gemeldet, und mehr Meldungen decken mehr Arten ab. Mit Querschnittsdaten lässt sich das
+        aber nicht von einer gemeinsamen Ursache unterscheiden, etwa der Erreichbarkeit eines
+        Quadrats. Zudem ist der Zusammenhang zwischen Meldungen und Abdeckung teilweise mechanisch:
+        Mehr Meldungen erfassen zwangsläufig mehr Arten. Das widerlegt H1 nicht; beide Modelle
+        werden berichtet.
         """),
     ])
     return
@@ -483,11 +574,43 @@ def _(as_frame, entry, main_cells, mo, np, plt, res_main):
         """),
         mo.ui.table(_slopes.round(4).reset_index(names="Plattform"), selection=None),
         mo.md(r"""
-        Bei gleichem Aufwand nimmt die Abdeckung von eBird mit dem Siedlungsanteil leicht ab, die
-        von iNaturalist zu. Für Observation.org lässt sich kein Zusammenhang nachweisen. Die
-        Abbildung zeigt die unkontrollierten Klassenmittel.
+        Bei gleichem plattformeigenem Aufwand nimmt die Abdeckung von eBird mit dem
+        Siedlungsanteil leicht ab, die von iNaturalist zu. Für Observation.org lässt sich kein
+        Zusammenhang nachweisen. Die Abbildung zeigt dagegen die unkontrollierten Klassenmittel:
+        Ohne Kontrolle steigt die Abdeckung von eBird mit dem Siedlungsanteil deutlich stärker an
+        als die von iNaturalist.
         """),
         _fig,
+    ])
+    return
+
+
+@app.cell
+def _(as_frame, mo, res_main):
+    _spec = as_frame(res_main, "H3 Robustheit: Interaktionsterm")
+    _rank = as_frame(res_main, "H3 Robustheit: Spearman")
+    _spec_view = _spec.assign(p=_spec.p.map(lambda v: f"{v:.1e}")).round(3)
+    mo.vstack([
+        mo.md(r"""
+        **Robustheit von H3.** Das Ergebnis von Modell 3 hängt an zwei Entscheiden: dass der
+        Aufwand kontrolliert wird und dass er je Plattform verschieden wirken darf. Begründet ist
+        das, weil die Abdeckung von eBird (rund 37 %) und iNaturalist (rund 5 %) auf ganz
+        verschiedenem Niveau liegt. Die Tabelle zeigt, was ohne diese Entscheide herauskommt:
+        """),
+        mo.ui.table(_spec_view.reset_index(names="Spezifikation"), selection=None),
+        mo.md(r"""
+        Mit gemeinsamem Aufwandskoeffizienten (B) und ohne Kontrolle (C) kehrt sich das
+        Vorzeichen um: Dann hängt eBird stärker am Siedlungsanteil. Der rangbasierte Vergleich,
+        der vom unterschiedlichen Niveau nicht beeinflusst wird, zeigt für eBird und iNaturalist
+        praktisch gleich starke Zusammenhänge:
+        """),
+        mo.ui.table(_rank.round(3).reset_index(names="Plattform"), selection=None),
+        mo.md(r"""
+        H3 ist damit nur in einer bedingten Form gestützt: Bei gleichem plattformeigenem Aufwand
+        steigt die Abdeckung von iNaturalist mit dem Siedlungsanteil, die von eBird sinkt. Die
+        allgemeine Aussage, iNaturalist hänge stärker vom Siedlungsanteil ab, tragen die Daten
+        nicht.
+        """),
     ])
     return
 
@@ -575,26 +698,29 @@ def _(as_frame, entry, mo, res_main):
     Ja, aber nur für den Siedlungsanteil. Je mehr Siedlungsfläche ein Quadrat hat, desto höher ist
     die Abdeckung (H1: rho = {_h12.loc['H1 Siedlung', 'rho']:.2f}, Holm-p = {_p1:.1e}, gestützt).
     Für den Anteil unproduktiver Fläche finden wir keinen Zusammenhang (H2: rho =
-    {_h12.loc['H2 unproduktiv', 'rho']:.3f}, Holm-p = {_p2:.2f}, nicht gestützt). Dieser Zusammenhang
-    läuft fast vollständig über den Beobachtungsaufwand: Mit Kontrolle der Zahl der Meldungen und
-    Beobachter ist der Koeffizient des Siedlungsanteils {_s.coefficient:.3f}
-    [{_s.ci_low:.3f}; {_s.ci_high:.3f}] und nicht mehr von null verschieden. Die Landnutzung erklärt
-    also, *wo gemeldet wird*, und der Aufwand erklärt, *wie viel abgedeckt wird*. Unter Kontrolle des
+    {_h12.loc['H2 unproduktiv', 'rho']:.3f}, Holm-p = {_p2:.2f}, nicht gestützt). Mit Kontrolle der
+    Zahl der Meldungen und Beobachter ist der Koeffizient des Siedlungsanteils {_s.coefficient:.3f}
+    [{_s.ci_low:.3f}; {_s.ci_high:.3f}] und nicht mehr von null verschieden. Das ist damit
+    vereinbar, dass die Landnutzung vor allem erklärt, *wo gemeldet wird*, und der Aufwand,
+    *wie viel abgedeckt wird*; eine gemeinsame Ursache wie die Erreichbarkeit können wir mit
+    diesen Daten nicht ausschliessen. Unter Kontrolle des
     Aufwands ist die Abdeckung in Quadraten mit mehr unproduktiver Fläche sogar etwas höher
     ({_u.coefficient:+.3f} [{_u.ci_low:.3f}; {_u.ci_high:.3f}]), also das Gegenteil von H2. Eine
     Erklärung (weniger Arten, die leichter erfasst werden) haben wir nicht geprüft.
 
     **FF2: Unterscheiden sich die Plattformen?**
-    Ja. Die Abdeckung von iNaturalist hängt stärker vom Siedlungsanteil ab als die von eBird (H3:
-    Interaktion {_h3['coefficient']:+.3f} [{_h3['ci_low']:.3f}; {_h3['ci_high']:.3f}], Holm-p =
-    {_p3:.1e}, gestützt). Bei gleichem Aufwand steigt die Abdeckung von iNaturalist mit dem
-    Siedlungsanteil ({_slopes.loc['inaturalist', 'slope_settlement']:+.3f}), die von eBird sinkt
-    leicht ({_slopes.loc['ebird', 'slope_settlement']:+.3f}). Die Abdeckung insgesamt unterscheidet
-    sich stark: eBird deckt im Mittel rund 37 % der Referenzpaare ab, iNaturalist und
-    Observation.org je rund 5 %.
+    Im Niveau deutlich: eBird erreicht im Mittel eine Abdeckungsquote von rund 37 % pro Quadrat,
+    iNaturalist und Observation.org je rund 5 %. Im Muster nur bedingt. Der primäre Test von H3
+    ist positiv (Interaktion {_h3['coefficient']:+.3f} [{_h3['ci_low']:.3f}; {_h3['ci_high']:.3f}],
+    Holm-p = {_p3:.1e}): Bei gleichem plattformeigenem Aufwand steigt die Abdeckung von
+    iNaturalist mit dem Siedlungsanteil ({_slopes.loc['inaturalist', 'slope_settlement']:+.3f}), die
+    von eBird sinkt leicht ({_slopes.loc['ebird', 'slope_settlement']:+.3f}). Dieses Ergebnis hängt
+    aber an der Spezifikation. Ohne Kontrolle des Aufwands hängt eBird stärker am Siedlungsanteil,
+    rangbasiert sind beide Plattformen etwa gleich (Abschnitt 6.3). H3 gilt deshalb nur in der
+    bedingten Form als gestützt.
 
-    **Robustheit.** Die Aussagen bleiben bei einer Schwelle von 5'000 m und bei Verwendung aller
-    Referenznachweise gleich (Abschnitt 7).
+    **Robustheit gegenüber den Setzungen.** Die Aussagen bleiben bei einer Schwelle von 5'000 m
+    und bei Verwendung aller Referenznachweise gleich (Abschnitt 7).
     """)
     return
 
@@ -621,16 +747,23 @@ def _(mo):
       ist keine Aussage möglich.
     - **Räumliche Autokorrelation:** Benachbarte Quadrate sind ähnlich (Moran's I), die p-Werte
       sind vorsichtig zu lesen.
+    - **H3 hängt an der Spezifikation:** Nur mit plattformeigenem Aufwand als Kontrolle ist die
+      Interaktion positiv; ohne Kontrolle oder mit gemeinsamem Aufwandskoeffizienten kehrt sie
+      sich um.
     - **Lineares Modell für Anteile:** Die Abdeckungsquote ist bei iNaturalist und Observation.org
       ein Anteil nahe 0. Die lineare Regression ist dort nur eine Näherung; die Hauptaussagen
       tragen die rangbasierten Spearman-Tests.
     - **Lizenz:** Observation.org und Teile von iNaturalist sind CC BY-NC, eine kommerzielle
       Weiterverwendung ist ausgeschlossen.
 
-    **Ausblick Teil 2.** Auf der Analysetabelle lässt sich ein Modell aufbauen, das die Abdeckung
-    eines Quadrats vorhersagt. Vorgeschlagen ist der Vergleich zweier Klassifikationsmodelle
-    (Option B). Für die Abdeckungsquote selbst wäre ein binomiales Modell mit der Zahl der
-    Referenzarten als Nenner der passendere Ansatz.
+    **Ausblick Teil 2.** Für Serving ist Option B (Machine Learning) vorgesehen. Die
+    Untersuchungseinheit wechselt dafür vom Quadrat zum Art/Quadrat-Paar: Zielgrösse ist, ob eine
+    Art mit Brutnachweis auf den Plattformen gemeldet wurde (ja/nein), Merkmale sind Landnutzung,
+    Aufwand und Eigenschaften der Art. Damit ist es eine Klassifikation, für die zwei Modelle
+    verglichen werden (zum Beispiel logistische Regression und Random Forest). Für die
+    Abdeckungsquote eines Quadrats wäre ein binomiales Modell mit der Zahl der Referenzarten als
+    Nenner der passende Ansatz. Die Robustheit von H3 wird dort mit einem Mass geprüft, das vom
+    Niveau der Plattformen unabhängig ist.
 
     ## Quellen und Daten
 

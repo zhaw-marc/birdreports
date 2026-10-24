@@ -7,3 +7,6 @@ storage_test_out/*
 !storage_test_out/storage_test.json
 # Sensitivitaetslaeufe: Datenbanken und Tabellen sind reproduzierbar, die Testergebnisse bleiben.
 build_out_sens_*/
+# marimo-Sitzungszustand und Office-Sperrdateien
+notebooks/__marimo__/
+~$*

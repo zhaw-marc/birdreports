@@ -23,7 +23,7 @@ FF2 (Plattformen): Unterscheiden sich die Plattformen im Abdeckungsmuster?
 
 - H3: Die Abdeckungsquote von iNaturalist hängt stärker vom Siedlungsanteil ab als die von eBird.
 
-Problemstellung, Methodik, Lebenszyklus und Limitationen sind im separaten Dokument «Projektarbeit Teil 1: Konzeption» ausgeführt.
+Problemstellung, Methodik, Lebenszyklus und Limitationen sind im Notebook (`notebooks/birdreports.py`, Abschnitte 1, 2 und 9) und in der Präsentation (`docs/presentation/`) ausgeführt.
 
 ## Datenquellen
 
@@ -71,7 +71,7 @@ pip install -r requirements.txt
 
 ## Notebook
 
-Das Notebook `notebooks/birdreports.py` ist das Serving-Artefakt. Es liest die gespeicherten Ergebnisse (`build_out/`, `analysis_out*/`, `profile_out/`, `storage_test_out/`, `ingest_out/`), rechnet die Pipeline nicht neu und braucht die Rohdaten nicht.
+Das Notebook `notebooks/birdreports.py` bündelt Konzeption, Lebenszyklus und Ergebnisse von Teil 1. Es liest die gespeicherten Ergebnisse (`build_out/`, `analysis_out*/`, `profile_out/`, `storage_test_out/`, `ingest_out/`) und fragt die Analysedatenbank `build_out/birdreports.duckdb` per SQL ab, rechnet die Pipeline aber nicht neu und braucht die Rohdaten nicht. Die Phase Serving im engeren Sinn (Option B) folgt in Teil 2.
 
 ```
 marimo edit notebooks/birdreports.py    # interaktiv
@@ -84,9 +84,10 @@ marimo run  notebooks/birdreports.py    # nur lesen
 birdreports/
 ├── README.md
 ├── requirements.txt
+├── run_all.sh                   # Orchestrierung: alle Schritte in fester Reihenfolge
 ├── .gitignore
 ├── docs/
-│   └── lueckenanalyse-teil1.md  # Abgleich mit Bewertungsraster und Vorlesung
+│   └── presentation/            # Präsentation Kolloquium 1
 ├── notebooks/
 │   └── birdreports.py           # marimo-Notebook: Konzeption, Lebenszyklus, Ergebnisse, Antworten
 ├── src/
@@ -94,11 +95,12 @@ birdreports/
 │   ├── storage_test.py          # Storage-Evaluation DuckDB gegen SQLite
 │   ├── profile_data.py          # initiale Analyse der Datengrundlage (misst nur)
 │   ├── build_analysis_table.py  # Bereinigung und Analysetabelle pro Quadrat
-│   └── hypothesis_tests.py      # Hypothesentests H1 bis H3
+│   ├── check_outputs.py         # Datenprüfungen nach dem Muster der dbt-Tests
+│   └── hypothesis_tests.py      # Hypothesentests H1 bis H3 inkl. Robustheit von H3
 ├── mappings/
 │   └── taxon_mapping.csv        # Artnamen Vogelwarte gegen Catalogue of Life
 ├── ingest_out/                  # Protokoll der Downloads (Datum, URL, DOI, Prüfsumme)
-├── build_out/                   # bereinigte Tabellen, Analysetabelle, Analysedatenbank (Hauptanalyse)
+├── build_out/                   # bereinigte Tabellen, Analysetabelle, Analysedatenbank, checks.json (Hauptanalyse)
 ├── analysis_out/                # Ergebnisse der Hypothesentests (Hauptanalyse)
 ├── build_out_sens_*/            # Sensitivitätsläufe: alle Nachweise, iNaturalist bis 5'000 m
 ├── analysis_out_sens_*/         # Testergebnisse der Sensitivitätsläufe
@@ -118,7 +120,7 @@ flowchart TB
         G3["BFS Arealstatistik<br/>Aktueller Stand<br/>4'129'071 Hektarpunkte, AS_4"]
     end
 
-    subgraph ING["Ingestion (Batch, Pull)"]
+    subgraph ING["Ingestion (Batch, Pull, bounded)"]
         I1["src/download_data.py<br/>Datum, URL, DOI, HTTP-Status, SHA-256"]
         I2[("data/<br/>Rohdaten, nicht versioniert")]
         I3["ingest_out/download_log.json"]
@@ -137,8 +139,10 @@ flowchart TB
         C2["Referenz: nur CH, 10-km-Meldungen markiert,<br/>Hauptanalyse nur Nachweise ab 2020,<br/>Artnamen über mappings/taxon_mapping.csv"]
         C3["Landnutzung: Hektaren und Anteile<br/>der 4 Klassen pro 5-km-Quadrat"]
         C4["Analysetabelle: Abdeckungsquote pro Quadrat<br/>Hauptanalyse: Quadrate ab 1'000 ha<br/>und mit mindestens einem Brutnachweis"]
+        C5["src/check_outputs.py<br/>Datenprüfungen, Abbruch bei Fehler"]
         C0 --> C1 & C2 & C3
         C1 & C2 & C3 --> C4
+        C4 --> C5
     end
 
     subgraph STO["Storage"]
@@ -148,13 +152,13 @@ flowchart TB
         ST["src/storage_test.py<br/>Evaluation DuckDB gegen SQLite"]
     end
 
-    subgraph SRV["Serving und Auswertung"]
+    subgraph SRV["Transformation Teil 1: Hypothesentests und Darstellung"]
         direction TB
         H0["src/hypothesis_tests.py"]
         H1["H1: Spearman Siedlung<br/>H2: Spearman unproduktiv<br/>H3: Interaktion Plattform x Siedlung"]
-        H2["Kontrolle Aufwand, Holm-Korrektur,<br/>Moran's I der Residuen"]
+        H2["Kontrolle Aufwand, Holm-Korrektur,<br/>Moran's I der Residuen,<br/>Robustheit H3 je Spezifikation"]
         H3["analysis_out/<br/>Ergebnisse der Tests"]
-        H4["Beantwortung FF1 und FF2<br/>Präsentation"]
+        H4["Beantwortung FF1 und FF2<br/>Notebook mit SQL auf DuckDB, Präsentation"]
         H0 --> H1 --> H2 --> H3 --> H4
     end
 
@@ -184,28 +188,32 @@ flowchart TB
         direction LR
         U1["Data Management: taxon_mapping.csv, Lizenzen, Zitation"]
         U2["Security: Beobachter-Hash mit festem Salt"]
-        U3["DataOps: Protokolle, Prüfsummen, requirements.txt"]
+        U3["DataOps: Protokolle, Prüfsummen, Datenprüfungen, requirements.txt"]
+        U4["Orchestration: run_all.sh"]
     end
 ```
 
 ## Pipeline
 
+`run_all.sh` führt alle Schritte in fester Reihenfolge aus und bricht beim ersten Fehler ab, auch wenn eine Datenprüfung fehlschlägt:
+
+```
+./run_all.sh                  # Download, Profiling, Bereinigung, Prüfungen, Tests, Sensitivitätsläufe
+./run_all.sh --analysis-only  # nur Prüfungen und Hypothesentests auf den vorhandenen Tabellen
+./run_all.sh --storage        # zusätzlich die Storage-Evaluation (rund 320 MB Testdateien)
+```
+
+Einzeln entspricht das diesen Aufrufen:
+
 ```
 python src/download_data.py
-python src/profile_data.py         LANDUSE.csv PLATFORM.csv VOGELWARTE/occurrence.txt mappings/taxon_mapping.csv
-python src/build_analysis_table.py LANDUSE.csv PLATFORM.csv VOGELWARTE/occurrence.txt mappings/taxon_mapping.csv
+python src/profile_data.py         data/ag-b-00/ag-b-00.03-37-area-current-csv.csv data/0024005-260928105237408.csv data/dwca-soi_aves-v1/occurrence.txt mappings/taxon_mapping.csv
+python src/build_analysis_table.py data/ag-b-00/ag-b-00.03-37-area-current-csv.csv data/0024005-260928105237408.csv data/dwca-soi_aves-v1/occurrence.txt mappings/taxon_mapping.csv
+python src/check_outputs.py        build_out
 python src/hypothesis_tests.py     build_out/analysis_cells.parquet
 ```
 
-Die Hauptanalyse verwendet Nachweise ab 2020 (`--min-breeding-year 2020`) und iNaturalist-Meldungen bis 2'500 m Ungenauigkeit (`--max-uncertainty 2500`); beides sind die Standardwerte. Die beiden Sensitivitätsläufe schreiben in eigene Ordner und lassen die Hauptanalyse unberührt:
-
-```
-python src/build_analysis_table.py LANDUSE.csv PLATFORM.csv VOGELWARTE/occurrence.txt mappings/taxon_mapping.csv build_out_sens_all_years --min-breeding-year 0
-python src/hypothesis_tests.py     build_out_sens_all_years/analysis_cells.parquet analysis_out_sens_all_years
-
-python src/build_analysis_table.py LANDUSE.csv PLATFORM.csv VOGELWARTE/occurrence.txt mappings/taxon_mapping.csv build_out_sens_5000m --max-uncertainty 5000
-python src/hypothesis_tests.py     build_out_sens_5000m/analysis_cells.parquet analysis_out_sens_5000m
-```
+Die Hauptanalyse verwendet Nachweise ab 2020 (`--min-breeding-year 2020`) und iNaturalist-Meldungen bis 2'500 m Ungenauigkeit (`--max-uncertainty 2500`); beides sind die Standardwerte. Die beiden Sensitivitätsläufe schreiben in eigene Ordner (`build_out_sens_all_years` mit `--min-breeding-year 0`, `build_out_sens_5000m` mit `--max-uncertainty 5000`) und lassen die Hauptanalyse unberührt.
 
 `build_analysis_table.py` bereinigt die drei Quellen nach den Regeln der Konzeption und schreibt nach `build_out/`:
 
@@ -220,6 +228,18 @@ python src/hypothesis_tests.py     build_out_sens_5000m/analysis_cells.parquet a
 
 Die Beobachterkennung wird mit einem festen Salt gehasht (BLAKE2s, 8 Byte), bevor irgendetwas geschrieben wird; `recordedBy` verlässt das Skript nicht im Klartext.
 
+### Datenprüfungen
+
+`src/check_outputs.py` prüft die Tabellen nach jeder Bereinigung, bevor die Hypothesentests laufen. Die Prüfungen folgen den vier Arten der dbt-Datentests (unique, not_null, accepted_values, relationships) und stehen je für eine Regel, deren Verletzung eine falsche, aber plausibel aussehende Zahl ergäbe:
+
+- Art/Quadrat-Paare der Referenz und Quadrate sind eindeutig
+- Plattform, Jahr, Brutmonat und iNaturalist-Ungenauigkeit liegen in den erlaubten Werten, `recordedBy` ist entfernt
+- Landnutzungsanteile summieren sich auf 1, kein Quadrat hat mehr als 2'500 ha
+- Abdeckungsquoten liegen zwischen 0 und 1, Treffer übersteigen die Referenzarten nie
+- Referenzarten und Treffer der Analysetabelle lassen sich aus den bereinigten Tabellen nachzählen
+
+Das Ergebnis steht in `build_out/checks.json`; bei einer verletzten Regel endet das Skript mit Exit-Code 1.
+
 Bezeichner und Spaltennamen sind im gesamten Repository englisch, Kommentare, Docstrings und Konsolenausgaben deutsch. Die vier Landnutzungsklassen heissen `settlement`, `agriculture`, `wooded` und `unproductive` (AS_4 = 1 bis 4), die Abdeckungsquoten `coverage_<plattform>` und `coverage_any`.
 
 ## Lieferumfang Teil 1 und Stand
@@ -229,31 +249,43 @@ Bezeichner und Spaltennamen sind im gesamten Repository englisch, Kommentare, Do
 - [x] Ingestion: Arealstatistik (Variablenbeschreibung geprüft, 4'129'071 Hektaren)
 - [x] Storage: Evaluation und Wahl der Speicherumgebung (DuckDB mit Parquet)
 - [x] Transformation Teil 1: initiale Analyse (`profile_data.py`) und Bereinigung (`build_analysis_table.py`)
-- [x] Hypothesentests H1 bis H3 (`hypothesis_tests.py`)
+- [x] Datenprüfungen der bereinigten Tabellen (`check_outputs.py`)
+- [x] Hypothesentests H1 bis H3 inklusive Robustheit von H3 (`hypothesis_tests.py`)
 - [x] Download-Skript mit DOI, Datum und Prüfsumme im Protokoll (`download_data.py`)
-- [ ] Beantwortung der Forschungsfragen im Notebook, mit Quellenangaben
+- [x] Orchestrierung (`run_all.sh`)
+- [x] Beantwortung der Forschungsfragen im Notebook, mit Quellenangaben
 - [x] Sensitivitätsläufe zu Referenzalter und iNaturalist-Schwelle (`build_out_sens_*`, `analysis_out_sens_*`)
-- [ ] Weitere Sensitivitätsanalysen (10-km-Meldungen, Brutzeitgrenzen, Randquadrate)
-- [ ] Tests für die Transformationsschritte
-- [ ] Präsentation
-
-Die Lücken gegenüber dem Bewertungsraster sind in [docs/lueckenanalyse-teil1.md](docs/lueckenanalyse-teil1.md) dokumentiert.
+- [x] Präsentation (`docs/presentation/`)
+- [ ] Weitere Sensitivitätsanalysen (10-km-Meldungen, Brutzeitgrenzen, Randquadrate), vorgesehen für Teil 2
 
 ## Ergebnisse der Hypothesentests
 
-Grundlage ist die Hauptanalyse mit Nachweisen ab 2020 und iNaturalist-Meldungen bis 2'500 m Ungenauigkeit (die Parameter stehen im `build_log.json`). Sie umfasst 1'614 Quadrate, also ohne Randquadrate unter 1'000 ha und ohne Quadrate ohne Brutnachweis, mit insgesamt 86'530 Art/Quadrat-Paaren. Die mittlere Abdeckungsquote je Quadrat beträgt 37,2 % für eBird, 5,2 % für iNaturalist, 5,5 % für Observation.org und 39,9 % für alle drei Plattformen zusammen.
+Grundlage ist die Hauptanalyse mit Nachweisen ab 2020 und iNaturalist-Meldungen bis 2'500 m Ungenauigkeit (die Parameter stehen im `build_log.json`). Sie umfasst 1'614 Quadrate, also ohne Randquadrate unter 1'000 ha und ohne Quadrate ohne Brutnachweis, mit insgesamt 86'530 Art/Quadrat-Paaren. Die mittlere Abdeckungsquote je Quadrat beträgt 37,2 % für eBird, 5,2 % für iNaturalist, 5,5 % für Observation.org und 39,9 % für alle drei Plattformen zusammen. Weil eBird den grössten Teil der Meldungen stellt, sind die Aussagen zur Abdeckung aller Plattformen weitgehend Aussagen über eBird.
 
 | Hypothese | Test | Effektstärke [95 %-KI] | p (Holm) | Ergebnis |
 |---|---|---|---|---|
-| H1 Siedlung ↑ → Abdeckung ↑ | Spearman | rho = 0,338 [0,292; 0,383] | 4,7e-44 | gestützt |
-| H2 unproduktiv ↑ → Abdeckung ↓ | Spearman | rho = −0,001 [−0,053; 0,051] | 0,974 | nicht gestützt |
-| H3 iNaturalist hängt stärker von Siedlung ab als eBird | Interaktionsterm | +0,235 [0,151; 0,319] | 7,2e-08 | gestützt |
+| H1 Siedlung ↑ → Abdeckung ↑ | Spearman | rho = 0,338 [0,293; 0,382] | 4,7e-44 | gestützt |
+| H2 unproduktiv ↑ → Abdeckung ↓ | Spearman | rho = −0,001 [−0,050; 0,048] | 0,974 | nicht gestützt |
+| H3 iNaturalist hängt stärker von Siedlung ab als eBird | Interaktionsterm | +0,235 [0,151; 0,319] | 7,2e-08 | nur bedingt gestützt (siehe unten) |
 
-Die Kontrolle des Beobachtungsaufwands verändert das Bild erheblich. Die Zahl der Meldungen je Quadrat korreliert zu rho = 0,934 mit der Abdeckungsquote, und das R² steigt von 0,126 im Modell mit Landnutzung allein auf 0,856, sobald der Aufwand hinzukommt. Der Koeffizient des Siedlungsanteils fällt dabei von +1,20 auf −0,059 [−0,133; 0,015] und ist nicht mehr von null verschieden. Die Landnutzung wirkt also überwiegend über den Aufwand. Modell 2 widerlegt H1 damit nicht, sondern weist den Aufwand als Mediator aus; berichtet werden beide Modelle.
+Die Konfidenzintervalle für Spearman nutzen die Fisher-z-Transformation mit der Varianz (1 + rho²/2)/(n − 3) nach Bonett & Wright (2000).
+
+Die Kontrolle des Beobachtungsaufwands verändert das Bild erheblich. Die Zahl der Meldungen je Quadrat korreliert zu rho = 0,934 mit der Abdeckungsquote, und das R² steigt von 0,126 im Modell mit Landnutzung allein auf 0,856, sobald der Aufwand hinzukommt. Der Koeffizient des Siedlungsanteils fällt dabei von +1,20 auf −0,059 [−0,133; 0,015] und ist nicht mehr von null verschieden. Das ist damit vereinbar, dass die Landnutzung über den Aufwand wirkt. Mit Querschnittsdaten lässt sich das aber nicht von einer gemeinsamen Ursache wie der Erreichbarkeit eines Quadrats unterscheiden, und der Zusammenhang zwischen Meldungen und Abdeckung ist teilweise mechanisch: Mehr Meldungen erfassen zwangsläufig mehr Arten. Modell 2 widerlegt H1 nicht; berichtet werden beide Modelle.
 
 H2 bleibt auch ohne Aufwandskontrolle ohne Zusammenhang. Unter Kontrolle des Aufwands ist die Abdeckung in Quadraten mit mehr unproduktiver Fläche leicht höher (+0,130 [0,096; 0,164]). Das ist das Gegenteil der Hypothese; eine mögliche Erklärung ist, dass dort weniger Arten brüten und die wenigen vorkommenden Arten eher erfasst werden. Das haben wir nicht geprüft.
 
-Die Steigung des Siedlungsanteils je Plattform, aus getrennten Modellen mit HC3-Standardfehlern: eBird −0,118 [−0,191; −0,045], iNaturalist +0,117 [0,065; 0,169], Observation.org −0,026 [−0,065; 0,013]. Bei gleichem Aufwand nimmt die Abdeckung von eBird mit dem Siedlungsanteil also leicht ab, die von iNaturalist zu.
+Die Steigung des Siedlungsanteils je Plattform, aus getrennten Modellen mit plattformeigenem Aufwand und HC3-Standardfehlern: eBird −0,118 [−0,191; −0,045], iNaturalist +0,117 [0,065; 0,169], Observation.org −0,026 [−0,065; 0,013]. Bei gleichem plattformeigenem Aufwand nimmt die Abdeckung von eBird mit dem Siedlungsanteil also leicht ab, die von iNaturalist zu.
+
+**Robustheit von H3.** Das Ergebnis hängt an zwei Entscheiden der Modellierung: dass der Aufwand kontrolliert wird und dass er je Plattform verschieden wirken darf. Die zweite Setzung ist begründet, weil die Abdeckung von eBird und iNaturalist auf ganz verschiedenem Niveau liegt. Ohne diese Entscheide kehrt sich das Vorzeichen um:
+
+| Spezifikation | Interaktion iNaturalist × Siedlung [95 %-KI] |
+|---|---|
+| A: Plattform × Landnutzung und Aufwand (primärer Test) | +0,235 [0,151; 0,319] |
+| B: Aufwand mit gemeinsamem Koeffizienten | −0,296 [−0,376; −0,215] |
+| C: ohne Kontrolle des Aufwands | −0,714 [−0,871; −0,557] |
+| rangbasiert: Spearman Siedlung gegen Abdeckung | eBird 0,361, iNaturalist 0,327, Observation.org 0,200 |
+
+Ohne Kontrolle hängt die Abdeckung von eBird absolut stärker am Siedlungsanteil, rangbasiert sind eBird und iNaturalist etwa gleich. H3 ist damit nur in der bedingten Form gestützt: Bei gleichem plattformeigenem Aufwand steigt die Abdeckung von iNaturalist mit dem Siedlungsanteil, die von eBird sinkt. Die allgemeine Aussage, iNaturalist hänge stärker vom Siedlungsanteil ab, tragen die Daten nicht.
 
 Moran's I der Residuen von Modell 2 beträgt 0,113 (Permutationstest mit 999 Permutationen, p = 0,001, Rook-Nachbarschaft auf dem 5-km-Raster), das der Abdeckungsquote selbst 0,304. Benachbarte Quadrate sind demnach nicht unabhängig, womit die in der Konzeption angekündigte räumliche Autokorrelation tatsächlich auftritt und die p-Werte entsprechend vorsichtig zu interpretieren sind.
 
@@ -267,17 +299,36 @@ Die zwei Sensitivitätsläufe verändern je eine Setzung der Hauptanalyse (siehe
 |---|---|---|---|
 | Quadrate / Referenzpaare | 1'614 / 86'530 | 1'637 / 127'269 | 1'614 / 86'530 |
 | mittlere Abdeckung, alle Plattformen | 39,9 % | 32,6 % | 39,9 % |
-| H1 Spearman rho [KI] | 0,338 [0,292; 0,383] | 0,368 [0,322; 0,411] | 0,339 [0,292; 0,384] |
-| H2 Spearman rho [KI] | −0,001 [−0,053; 0,051] | −0,042 [−0,093; 0,009] | −0,001 [−0,053; 0,051] |
-| H3 Interaktion [KI] | +0,235 [0,151; 0,319] | +0,204 [0,141; 0,268] | +0,236 [0,152; 0,319] |
+| H1 Spearman rho [KI] | 0,338 [0,293; 0,382] | 0,368 [0,324; 0,410] | 0,339 [0,294; 0,382] |
+| H2 Spearman rho [KI] | −0,001 [−0,050; 0,048] | −0,042 [−0,090; 0,006] | −0,001 [−0,050; 0,048] |
+| H3 Interaktion, primär (A) [KI] | +0,235 [0,151; 0,319] | +0,204 [0,141; 0,268] | +0,236 [0,152; 0,319] |
+| H3 Interaktion ohne Aufwand (C) | −0,714 | −0,656 | −0,710 |
 | Siedlung in Modell 2 [KI] | −0,059 [−0,133; 0,015] | −0,044 [−0,098; 0,010] | −0,058 [−0,132; 0,017] |
 | Moran's I der Residuen | 0,113 | 0,160 | 0,113 |
 
-Die Aussagen zu H1, H2 und H3 sind in allen drei Läufen gleich: H1 und H3 gestützt, H2 nicht gestützt, der Siedlungsanteil in Modell 2 nicht von null verschieden. Die Schwelle für iNaturalist (2'500 gegen 5'000 m) ändert die Ergebnisse praktisch nicht. Das Referenzalter verschiebt vor allem das Niveau der Abdeckung (32,6 gegen 39,9 %), weil ältere Nachweise häufiger als Lücke erscheinen, und etwas die Effektstärken, ohne eine Schlussfolgerung zu kippen.
+Die Aussagen sind in allen drei Läufen gleich: H1 gestützt, H2 nicht gestützt, H3 nur in der bedingten Form, der Siedlungsanteil in Modell 2 nicht von null verschieden. Die Schwelle für iNaturalist (2'500 gegen 5'000 m) ändert die Ergebnisse praktisch nicht, weil sie nur 2'455 Meldungen betrifft; sie belegt eher die Qualität der Koordinaten als eine Abhängigkeit der Ergebnisse. Das Referenzalter verschiebt vor allem das Niveau der Abdeckung (32,6 gegen 39,9 %), weil ältere Nachweise häufiger als Lücke erscheinen, und etwas die Effektstärken, ohne eine Schlussfolgerung zu kippen.
 
 ## Storage
 
-Die Analysedatenbank ist DuckDB, die bereinigten Rohdaten liegen als Parquet vor. `src/storage_test.py` vergleicht DuckDB mit SQLite auf den Projektdaten; es handelt sich um eine Einzelmessung auf einem Rechner.
+Die Anforderungen sind tabellarisch und analytisch: ein Schreiber (die Pipeline), keine gleichzeitigen Zugriffe, keine Aktualisierung einzelner Zeilen, gelesen wird spaltenweise über viele Zeilen (Joins und Aggregationen über das Raster).
+
+| Kriterium | Anforderung im Projekt | DuckDB + Parquet | SQLite | PostgreSQL/PostGIS |
+|---|---|---|---|---|
+| Datenmodell | relational, Aggregation über Spalten | spaltenorientiert (OLAP) | zeilenorientiert (OLTP) | zeilenorientiert, Erweiterungen möglich |
+| Betrieb | ohne Server, im Repo reproduzierbar | eingebettet, eine Datei | eingebettet, eine Datei | Server nötig |
+| Transaktionen (ACID) | nicht nötig, ein Schreiber im Batch | vorhanden | vorhanden | vorhanden |
+| Verteilung (CAP) | nicht relevant, ein Rechner | – | – | Replikation möglich |
+| Raumfunktionen | nicht nötig, Raster aus LV95-Koordinaten | Erweiterung «spatial» | SpatiaLite | PostGIS |
+| Austauschformat | Tabellen für Notebook und Prüfungen | Parquet ist offen und typisiert | eigenes Dateiformat | Export nötig |
+
+Die Rollen sind getrennt: Parquet ist die Ablage der bereinigten Tabellen, die Notebook, Prüfungen und Hypothesentests lesen. DuckDB ist die Abfrage-Engine; sie liest die Roh-CSV in der Bereinigung, und `build_out/birdreports.duckdb` bündelt alle vier Tabellen für SQL-Abfragen. Das Notebook nutzt sie für die Frage, welche Arten auf den Plattformen am häufigsten fehlen:
+
+```
+python -c "import duckdb; print(duckdb.connect('build_out/birdreports.duckdb', read_only=True).sql(
+  'SELECT platform, COUNT(*) AS meldungen FROM platform_clean GROUP BY 1 ORDER BY 2 DESC'))"
+```
+
+PostgreSQL haben wir aufgrund der Kriterien nicht gemessen; ein Server bringt hier Betriebsaufwand ohne Nutzen. `src/storage_test.py` vergleicht DuckDB mit SQLite auf den Projektdaten:
 
 | | DuckDB | SQLite |
 |---|---|---|
@@ -287,7 +338,18 @@ Die Analysedatenbank ist DuckDB, die bereinigten Rohdaten liegen als Parquet vor
 | Zählung nach Datensatz, Jahr und Monat | 0,01 s | 1,01 s |
 | Dateigrösse der Datenbank | 46,7 MB | 272,9 MB |
 
-Die Plattformdaten umfassen als Parquet mit neun Spalten 26,5 MB. PostgreSQL mit PostGIS haben wir nicht gemessen, weil es einen Server voraussetzt und räumliche Funktionen entbehrlich sind: Die Quadrate werden aus den LV95-Koordinaten gerechnet.
+Es handelt sich um eine Einzelmessung auf einem Rechner, ohne Wiederholung. Die Ladezeiten sind nur bedingt vergleichbar, weil DuckDB die CSV mit dem eigenen Leser lädt und SQLite über pandas in Blöcken befüllt wird. Aussagekräftig sind die Abfragezeiten und die Dateigrösse; der Abstand bei den Aggregationen (Faktor rund 100) entspricht dem, was man von spaltenorientierter gegenüber zeilenorientierter Speicherung erwartet. Die Plattformdaten umfassen als Parquet mit neun Spalten 26,5 MB.
+
+## Skalierbarkeit
+
+Heute verarbeitet die Pipeline rund 600'000 bereinigte Meldungen und 1'839 Quadrate in wenigen Minuten auf einem Laptop. Bei 10-mal mehr Daten (weitere Jahre, Nachbarländer) oder einem 1-km-Raster (25-mal mehr Quadrate) wären das die Grenzen:
+
+| Phase | trägt heute | Grenze | nächster Schritt |
+|---|---|---|---|
+| Ingestion | ein GBIF-Download, 1,6 Mio. Zeilen | Search-API höchstens 100'000 Treffer pro Abfrage | GBIF-Download ist asynchron und skaliert; der Fallback teilt bereits nach Datensatz, Jahr und Monat auf |
+| Storage | Parquet und DuckDB auf einem Rechner | ein Schreiber, lokale Festplatte | Parquet nach Jahr und Datensatz partitionieren; DuckDB verarbeitet auch Daten grösser als der Arbeitsspeicher |
+| Transformation | pandas im Arbeitsspeicher | RAM bei mehreren Millionen Meldungen | Raster und Aggregation in DuckDB-SQL statt pandas |
+| Analyse | 1'614 Quadrate | Moran's-I-Permutationen wachsen mit der Zahl der Quadrate | dünn besetzte Gewichtsmatrix ist umgesetzt; ein 1-km-Raster trägt das noch |
 
 ## Hinweise zu den Daten
 

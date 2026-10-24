@@ -170,36 +170,36 @@
   "data": [
    [
     0.338,
-    0.292,
-    0.383,
+    0.293,
+    0.382,
     1.573435661e-44,
     1614.0
    ],
    [
     -0.001,
-    -0.053,
-    0.051,
+    -0.05,
+    0.048,
     0.9740553316,
     1614.0
    ],
    [
     -0.048,
-    -0.099,
-    0.004,
+    -0.096,
+    0.001,
     0.0545280031,
     1614.0
    ],
    [
     0.019,
-    -0.033,
-    0.071,
+    -0.03,
+    0.068,
     0.4456612082,
     1614.0
    ],
    [
     0.934,
-    0.927,
-    0.94,
+    0.926,
+    0.941,
     0.0,
     1614.0
    ]
@@ -513,6 +513,76 @@
    ]
   ]
  },
+ "H3 Robustheit: Interaktionsterm je Spezifikation (geclustert nach Quadrat)": {
+  "columns": [
+   "interaction",
+   "ci_low",
+   "ci_high",
+   "p"
+  ],
+  "index": [
+   "A: Plattform x Landnutzung und Aufwand (primaer, Modell 3)",
+   "B: Aufwand mit gemeinsamem Koeffizienten",
+   "C: ohne Kontrolle des Aufwands"
+  ],
+  "data": [
+   [
+    0.235,
+    0.1514,
+    0.3186,
+    3.62e-08
+   ],
+   [
+    -0.2956,
+    -0.376,
+    -0.2152,
+    0.0
+   ],
+   [
+    -0.7136,
+    -0.8705,
+    -0.5568,
+    4.651482351e-19
+   ]
+  ]
+ },
+ "H3 Robustheit: Spearman Siedlungsanteil gegen Abdeckung je Plattform (ohne Kontrolle)": {
+  "columns": [
+   "rho",
+   "ci_low",
+   "ci_high",
+   "p",
+   "n"
+  ],
+  "index": [
+   "ebird",
+   "inaturalist",
+   "observation_org"
+  ],
+  "data": [
+   [
+    0.361,
+    0.317,
+    0.404,
+    5.659410412e-51,
+    1614.0
+   ],
+   [
+    0.327,
+    0.281,
+    0.371,
+    2.094620084e-41,
+    1614.0
+   ],
+   [
+    0.2,
+    0.152,
+    0.246,
+    5.723986275e-16,
+    1614.0
+   ]
+  ]
+ },
  "Holm-Korrektur ueber die drei primaeren Tests": {
   "columns": [
    "p_raw",
@@ -558,14 +628,16 @@
  },
  "Antwort auf die Forschungsfragen": {
   "FF1 (Landnutzung)": {
-   "H1 Siedlung": "rho = 0.338 [0.292, 0.383], p_holm = 4.72e-44 -> positiver Zusammenhang",
-   "H2 unproduktiv": "rho = -0.001 [-0.053, 0.051], p_holm = 0.974 -> kein Zusammenhang nachweisbar",
+   "H1 Siedlung": "rho = 0.338 [0.293, 0.382], p_holm = 4.72e-44 -> positiver Zusammenhang",
+   "H2 unproduktiv": "rho = -0.001 [-0.05, 0.048], p_holm = 0.974 -> kein Zusammenhang nachweisbar",
    "mit Kontrolle des Aufwands": "siehe Modell 2: Koeffizient Siedlung -0.059 [-0.133, 0.015], unproduktiv 0.130 [0.096, 0.164]",
-   "Hinweis zur Kontrolle": "Der Aufwand allein erklaert die Abdeckung fast vollstaendig (Spearman log_records 0.934, R2 von Modell 1 0.126 auf 0.856). Die Landnutzung wirkt damit weitgehend ueber den Aufwand. Modell 2 schaetzt den Rest nach Herausrechnen des Aufwands und ist nicht als Widerlegung von H1 zu lesen, sondern als Hinweis auf einen Mediator."
+   "Hinweis zur Kontrolle": "Der Aufwand allein erklaert die Abdeckung fast vollstaendig (Spearman log_records 0.934, R2 von Modell 1 0.126 auf 0.856). Die Landnutzung wirkt damit weitgehend ueber den Aufwand. Modell 2 schaetzt den Rest nach Herausrechnen des Aufwands und ist nicht als Widerlegung von H1 zu lesen. Das Muster ist mit einer Vermittlung ueber den Aufwand vereinbar; mit Querschnittsdaten laesst sich das nicht von einer gemeinsamen Ursache wie der Erreichbarkeit unterscheiden."
   },
   "FF2 (Plattformen)": {
    "H3 Interaktion": "0.235 [0.151, 0.319], p_holm = 7.25e-08. Der Wert ist die Differenz der Siedlungssteigung (iNaturalist minus eBird); positiv stuetzt H3.",
    "H3 gestuetzt": true,
+   "H3 robust gegenueber der Spezifikation": false,
+   "Robustheit": "Interaktion je Spezifikation: A +0.235 [0.151, 0.319]; B -0.296 [-0.376, -0.215]; C -0.714 [-0.871, -0.557]. Spearman Siedlung gegen Abdeckung: ebird 0.361, inaturalist 0.327, observation_org 0.2. Gestuetzt ist H3 nur, wenn der Aufwand je Plattform kontrolliert wird; ohne diese Kontrolle haengt eBird absolut staerker am Siedlungsanteil, rangbasiert sind beide etwa gleich.",
    "Steigungen einzeln": {
     "ebird": -0.1183,
     "inaturalist": 0.1166,
