@@ -1,0 +1,578 @@
+{
+ "Datengrundlage": {
+  "source": "build_out_sens_5000m/analysis_cells.parquet",
+  "parameters": {
+   "grid_size_m": 5000,
+   "years": [
+    2020,
+    2024
+   ],
+   "breeding_months": [
+    4,
+    7
+   ],
+   "min_hectares": 1000,
+   "excluded_uncertainty_m": 7070,
+   "min_breeding_year": 2020,
+   "max_uncertainty_inaturalist_m": 5000.0
+  },
+  "cells": 1614,
+  "reference_pairs": 86530,
+  "coverage_any_mean": 0.399,
+  "coverage_any_median": 0.4
+ },
+ "Verteilung der Variablen": {
+  "columns": [
+   "coverage_any",
+   "coverage_ebird",
+   "coverage_inaturalist",
+   "coverage_observation_org",
+   "share_settlement",
+   "share_agriculture",
+   "share_wooded",
+   "share_unproductive",
+   "records",
+   "observers",
+   "reference_species"
+  ],
+  "index": [
+   "count",
+   "mean",
+   "std",
+   "min",
+   "25%",
+   "50%",
+   "75%",
+   "max"
+  ],
+  "data": [
+   [
+    1614.0,
+    1614.0,
+    1614.0,
+    1614.0,
+    1614.0,
+    1614.0,
+    1614.0,
+    1614.0,
+    1614.0,
+    1614.0,
+    1614.0
+   ],
+   [
+    0.399,
+    0.372,
+    0.053,
+    0.055,
+    0.08,
+    0.359,
+    0.324,
+    0.236,
+    362.227,
+    13.667,
+    53.612
+   ],
+   [
+    0.294,
+    0.302,
+    0.098,
+    0.099,
+    0.101,
+    0.193,
+    0.198,
+    0.283,
+    1407.189,
+    32.331,
+    24.719
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ],
+   [
+    0.108,
+    0.042,
+    0.0,
+    0.0,
+    0.01,
+    0.21,
+    0.177,
+    0.014,
+    9.0,
+    2.0,
+    36.0
+   ],
+   [
+    0.4,
+    0.364,
+    0.013,
+    0.013,
+    0.045,
+    0.36,
+    0.316,
+    0.099,
+    43.0,
+    5.0,
+    57.0
+   ],
+   [
+    0.65,
+    0.634,
+    0.06,
+    0.066,
+    0.113,
+    0.508,
+    0.467,
+    0.412,
+    179.0,
+    13.0,
+    71.0
+   ],
+   [
+    1.0,
+    1.0,
+    1.0,
+    0.714,
+    0.842,
+    0.802,
+    0.929,
+    1.0,
+    18269.0,
+    639.0,
+    125.0
+   ]
+  ]
+ },
+ "H1/H2: Spearman-Korrelation mit der Abdeckungsquote (alle drei Plattformen)": {
+  "columns": [
+   "rho",
+   "ci_low",
+   "ci_high",
+   "p",
+   "n"
+  ],
+  "index": [
+   "H1 Siedlung",
+   "H2 unproduktiv",
+   "(zusaetzlich) agriculture",
+   "(zusaetzlich) wooded",
+   "(zusaetzlich) effort_records"
+  ],
+  "data": [
+   [
+    0.339,
+    0.292,
+    0.384,
+    1.221053062e-44,
+    1614.0
+   ],
+   [
+    -0.001,
+    -0.053,
+    0.051,
+    0.9692922679,
+    1614.0
+   ],
+   [
+    -0.048,
+    -0.1,
+    0.004,
+    0.0536180066,
+    1614.0
+   ],
+   [
+    0.019,
+    -0.032,
+    0.071,
+    0.4371121432,
+    1614.0
+   ],
+   [
+    0.934,
+    0.927,
+    0.94,
+    0.0,
+    1614.0
+   ]
+  ]
+ },
+ "Modell 1: Landnutzung ohne Kontrolle (HC3)": {
+  "columns": [
+   "coefficient",
+   "std_error",
+   "ci_low",
+   "ci_high",
+   "t",
+   "p"
+  ],
+  "index": [
+   "Intercept",
+   "share_settlement",
+   "share_wooded",
+   "share_unproductive"
+  ],
+  "data": [
+   [
+    0.1992,
+    0.0263,
+    0.1476,
+    0.2508,
+    7.57,
+    0.0
+   ],
+   [
+    1.1981,
+    0.0737,
+    1.0536,
+    1.3427,
+    16.25,
+    2.332518402e-59
+   ],
+   [
+    0.2001,
+    0.0464,
+    0.1092,
+    0.2911,
+    4.31,
+    1.61818e-05
+   ],
+   [
+    0.1637,
+    0.0376,
+    0.0901,
+    0.2373,
+    4.36,
+    1.3131e-05
+   ]
+  ]
+ },
+ "Modell 2: Landnutzung mit Beobachtungsaufwand als Kontrolle (HC3)": {
+  "columns": [
+   "coefficient",
+   "std_error",
+   "ci_low",
+   "ci_high",
+   "t",
+   "p"
+  ],
+  "index": [
+   "Intercept",
+   "share_settlement",
+   "share_wooded",
+   "share_unproductive",
+   "log_records",
+   "log_observers"
+  ],
+  "data": [
+   [
+    -0.1119,
+    0.0106,
+    -0.1327,
+    -0.0912,
+    -10.58,
+    3.524131092e-26
+   ],
+   [
+    -0.0577,
+    0.0379,
+    -0.132,
+    0.0167,
+    -1.52,
+    0.12832627
+   ],
+   [
+    0.0379,
+    0.0179,
+    0.0029,
+    0.073,
+    2.12,
+    0.0339099574
+   ],
+   [
+    0.1306,
+    0.0174,
+    0.0966,
+    0.1647,
+    7.52,
+    0.0
+   ],
+   [
+    0.1523,
+    0.0032,
+    0.1461,
+    0.1586,
+    47.76,
+    0.0
+   ],
+   [
+    -0.0478,
+    0.0062,
+    -0.06,
+    -0.0356,
+    -7.68,
+    0.0
+   ]
+  ]
+ },
+ "Modellguete": {
+  "columns": [
+   "n",
+   "R2",
+   "R2_adj"
+  ],
+  "index": [
+   "Modell 1",
+   "Modell 2"
+  ],
+  "data": [
+   [
+    1614.0,
+    0.126,
+    0.125
+   ],
+   [
+    1614.0,
+    0.856,
+    0.856
+   ]
+  ]
+ },
+ "Modell 3: H3, Plattform x Landnutzung und Aufwand (geclustert nach Quadrat)": {
+  "columns": [
+   "coefficient",
+   "std_error",
+   "ci_low",
+   "ci_high",
+   "t",
+   "p"
+  ],
+  "index": [
+   "Intercept",
+   "platform[T.inaturalist]",
+   "share_settlement",
+   "platform[T.inaturalist]:share_settlement",
+   "share_wooded",
+   "platform[T.inaturalist]:share_wooded",
+   "share_unproductive",
+   "platform[T.inaturalist]:share_unproductive",
+   "log_records_platform",
+   "platform[T.inaturalist]:log_records_platform",
+   "log_observers_platform",
+   "platform[T.inaturalist]:log_observers_platform"
+  ],
+  "data": [
+   [
+    -0.0748,
+    0.0099,
+    -0.0942,
+    -0.0554,
+    -7.57,
+    0.0
+   ],
+   [
+    0.036,
+    0.0106,
+    0.0151,
+    0.0568,
+    3.38,
+    0.0007183883
+   ],
+   [
+    -0.1183,
+    0.0369,
+    -0.1907,
+    -0.0459,
+    -3.2,
+    0.0013598911
+   ],
+   [
+    0.2356,
+    0.0426,
+    0.1521,
+    0.3191,
+    5.53,
+    3.18e-08
+   ],
+   [
+    0.02,
+    0.0172,
+    -0.0137,
+    0.0537,
+    1.16,
+    0.2442497605
+   ],
+   [
+    0.0087,
+    0.0179,
+    -0.0264,
+    0.0439,
+    0.49,
+    0.6258827317
+   ],
+   [
+    0.0912,
+    0.0149,
+    0.0619,
+    0.1205,
+    6.11,
+    1e-09
+   ],
+   [
+    -0.0392,
+    0.0167,
+    -0.072,
+    -0.0063,
+    -2.34,
+    0.0193317329
+   ],
+   [
+    0.1401,
+    0.003,
+    0.1343,
+    0.1459,
+    47.35,
+    0.0
+   ],
+   [
+    -0.0488,
+    0.0046,
+    -0.0578,
+    -0.0397,
+    -10.55,
+    5.239988333e-26
+   ],
+   [
+    -0.0313,
+    0.0065,
+    -0.044,
+    -0.0186,
+    -4.84,
+    1.301e-06
+   ],
+   [
+    -0.0235,
+    0.0081,
+    -0.0394,
+    -0.0075,
+    -2.89,
+    0.0038908067
+   ]
+  ]
+ },
+ "H3: Interaktionsterm (Differenz der Siedlungssteigung iNaturalist minus eBird)": {
+  "coefficient": 0.2356,
+  "ci_low": 0.1521,
+  "ci_high": 0.3191,
+  "p": 3.176e-08,
+  "n_rows": 3228,
+  "n_cells": 1614
+ },
+ "Steigung des Siedlungsanteils je Plattform (eigene Modelle, HC3)": {
+  "columns": [
+   "slope_settlement",
+   "ci_low",
+   "ci_high",
+   "p",
+   "R2"
+  ],
+  "index": [
+   "ebird",
+   "inaturalist",
+   "observation_org"
+  ],
+  "data": [
+   [
+    -0.1183,
+    -0.1913,
+    -0.0453,
+    0.0014873928,
+    0.881
+   ],
+   [
+    0.1173,
+    0.0649,
+    0.1697,
+    1.14038e-05,
+    0.796
+   ],
+   [
+    -0.0262,
+    -0.0654,
+    0.0129,
+    0.188928899,
+    0.739
+   ]
+  ]
+ },
+ "Holm-Korrektur ueber die drei primaeren Tests": {
+  "columns": [
+   "p_raw",
+   "p_holm",
+   "signifikant_5%"
+  ],
+  "index": [
+   "H1 (Spearman Siedlung)",
+   "H2 (Spearman unproduktiv)",
+   "H3 (Interaktion)"
+  ],
+  "data": [
+   [
+    1.221053062e-44,
+    3.663159186e-44,
+    true
+   ],
+   [
+    0.9692922679,
+    0.9692922679,
+    false
+   ],
+   [
+    3.18e-08,
+    6.35e-08,
+    true
+   ]
+  ]
+ },
+ "Moran's I der Residuen von Modell 2": {
+  "morans_i": 0.113,
+  "expected": -0.0006,
+  "p_permutation": 0.001,
+  "permutations": 999,
+  "cells_without_neighbours": 0
+ },
+ "Moran's I der Abdeckungsquote selbst (zum Vergleich)": {
+  "morans_i": 0.304,
+  "expected": -0.0006,
+  "p_permutation": 0.001,
+  "permutations": 999,
+  "cells_without_neighbours": 0
+ },
+ "Antwort auf die Forschungsfragen": {
+  "FF1 (Landnutzung)": {
+   "H1 Siedlung": "rho = 0.339 [0.292, 0.384], p_holm = 3.66e-44 -> positiver Zusammenhang",
+   "H2 unproduktiv": "rho = -0.001 [-0.053, 0.051], p_holm = 0.969 -> kein Zusammenhang nachweisbar",
+   "mit Kontrolle des Aufwands": "siehe Modell 2: Koeffizient Siedlung -0.058 [-0.132, 0.017], unproduktiv 0.131 [0.097, 0.165]",
+   "Hinweis zur Kontrolle": "Der Aufwand allein erklaert die Abdeckung fast vollstaendig (Spearman log_records 0.934, R2 von Modell 1 0.126 auf 0.856). Die Landnutzung wirkt damit weitgehend ueber den Aufwand. Modell 2 schaetzt den Rest nach Herausrechnen des Aufwands und ist nicht als Widerlegung von H1 zu lesen, sondern als Hinweis auf einen Mediator."
+  },
+  "FF2 (Plattformen)": {
+   "H3 Interaktion": "0.236 [0.152, 0.319], p_holm = 6.35e-08. Der Wert ist die Differenz der Siedlungssteigung (iNaturalist minus eBird); positiv stuetzt H3.",
+   "H3 gestuetzt": true,
+   "Steigungen einzeln": {
+    "ebird": -0.1183,
+    "inaturalist": 0.1173,
+    "observation_org": -0.0262
+   }
+  },
+  "Modellgrenze": "Die Abdeckungsquote ist ein Anteil, bei iNaturalist und Observation.org nahe 0. Die lineare Regression ist dafuer nur eine Naeherung; primaer tragen die rangbasierten Spearman-Tests. Ein binomiales Modell ist fuer Teil 2 vorgesehen.",
+  "Limitation": "Moran's I der Residuen von Modell 2: 0.113 (p = 0.001). Benachbarte Quadrate sind nicht unabhaengig; die p-Werte sind entsprechend vorsichtig zu lesen."
+ }
+}

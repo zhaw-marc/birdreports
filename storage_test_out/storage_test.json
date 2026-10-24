@@ -1,0 +1,27 @@
+{
+  "duckdb: laden Arealstatistik": 0.26,
+  "duckdb: laden Plattformdaten": 2.29,
+  "duckdb: Abfrage A (Quadrate)": 0.01,
+  "duckdb: Abfrage B (Datensatz/Jahr/Monat)": 0.01,
+  "duckdb_rows": {
+    "landuse": 4129071,
+    "platform": 1595325,
+    "query_a_groups": 6916,
+    "query_b_groups": 205
+  },
+  "duckdb: Export Parquet": 0.09,
+  "duckdb: Abfrage B direkt auf Parquet": 0.01,
+  "duckdb_file_mb": 46.7,
+  "parquet_mb": 26.5,
+  "sqlite: laden Arealstatistik": 2.89,
+  "sqlite: laden Plattformdaten": 4.24,
+  "sqlite: Abfrage A (Quadrate)": 1.14,
+  "sqlite: Abfrage B (Datensatz/Jahr/Monat)": 1.0,
+  "sqlite_rows": {
+    "landuse": 4129071,
+    "platform": 1595325,
+    "query_a_groups": 6916,
+    "query_b_groups": 205
+  },
+  "sqlite_file_mb": 272.9
+}

@@ -1,0 +1,606 @@
+{
+ "Plattformen: Grunddaten": {
+  "columns": [
+   "rows",
+   "missing_coordinate",
+   "missing_species",
+   "outside_ch_bbox",
+   "missing_count_pct",
+   "distinct_observers",
+   "missing_observer_pct",
+   "apr_jul_pct"
+  ],
+  "index": [
+   "ebird",
+   "inaturalist",
+   "observation_org",
+   "other"
+  ],
+  "data": [
+   [
+    1384450,
+    0,
+    0,
+    0,
+    8.8,
+    5071,
+    0.0,
+    40.3
+   ],
+   [
+    66117,
+    0,
+    977,
+    2,
+    100.0,
+    2736,
+    0.0,
+    39.3
+   ],
+   [
+    56923,
+    0,
+    78,
+    0,
+    0.0,
+    2315,
+    0.0,
+    38.4
+   ],
+   [
+    87835,
+    53,
+    0,
+    54,
+    100.0,
+    6,
+    100.0,
+    54.9
+   ]
+  ]
+ },
+ "Plattformen: Koordinatenungenauigkeit (m)": {
+  "columns": [
+   "missing_pct",
+   "median",
+   "p90",
+   "above_1000_pct",
+   "above_2500_pct",
+   "above_5000_pct"
+  ],
+  "index": [
+   "ebird",
+   "inaturalist",
+   "observation_org",
+   "other"
+  ],
+  "data": [
+   [
+    100.0,
+    null,
+    null,
+    0.0,
+    0.0,
+    0.0
+   ],
+   [
+    8.4,
+    18.0,
+    1698.0,
+    11.35,
+    8.12,
+    7.19
+   ],
+   [
+    4.4,
+    8.0,
+    25.0,
+    0.02,
+    0.02,
+    0.0
+   ],
+   [
+    0.0,
+    3535.0,
+    3535.0,
+    99.99,
+    99.99,
+    1.06
+   ]
+  ]
+ },
+ "Plattformen: Meldungen pro Jahr": {
+  "columns": [
+   2020,
+   2021,
+   2022,
+   2023,
+   2024
+  ],
+  "index": [
+   "ebird",
+   "inaturalist",
+   "observation_org",
+   "other"
+  ],
+  "data": [
+   [
+    146260,
+    218396,
+    269245,
+    349491,
+    401058
+   ],
+   [
+    9636,
+    12620,
+    13101,
+    13722,
+    17038
+   ],
+   [
+    9155,
+    8125,
+    11271,
+    12892,
+    15480
+   ],
+   [
+    8390,
+    11073,
+    18201,
+    50168,
+    3
+   ]
+  ]
+ },
+ "Plattformen: Meldungen pro Monat": {
+  "columns": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "index": [
+   "ebird",
+   "inaturalist",
+   "observation_org",
+   "other"
+  ],
+  "data": [
+   [
+    103979,
+    95913,
+    126832,
+    186599,
+    167764,
+    110446,
+    93225,
+    99613,
+    111893,
+    114979,
+    85862,
+    87345
+   ],
+   [
+    4893,
+    5223,
+    5575,
+    6507,
+    8572,
+    5345,
+    5536,
+    4655,
+    4483,
+    4740,
+    4824,
+    5764
+   ],
+   [
+    3929,
+    5379,
+    6156,
+    5219,
+    3550,
+    3569,
+    9529,
+    5344,
+    2087,
+    4332,
+    4524,
+    3305
+   ],
+   [
+    5,
+    3,
+    0,
+    3,
+    10,
+    9,
+    6,
+    2,
+    3,
+    8,
+    2,
+    0
+   ]
+  ]
+ },
+ "Plattformen: Lizenzen": {
+  "columns": [
+   "CC0_1_0",
+   "CC_BY_4_0",
+   "CC_BY_NC_4_0"
+  ],
+  "index": [
+   "ebird",
+   "inaturalist",
+   "observation_org",
+   "other"
+  ],
+  "data": [
+   [
+    0,
+    1384450,
+    0
+   ],
+   [
+    1440,
+    11133,
+    53544
+   ],
+   [
+    0,
+    0,
+    56923
+   ],
+   [
+    0,
+    87834,
+    1
+   ]
+  ]
+ },
+ "platform_analysis_rows": 605576,
+ "reference": {
+  "rows": 129240,
+  "species": 213,
+  "cells": 1684,
+  "grid_offset_median_m": 0.20089837862178683
+ },
+ "Referenz: Koordinatenungenauigkeit": {
+  "columns": [
+   "rows"
+  ],
+  "index": [
+   3535,
+   7070
+  ],
+  "data": [
+   [
+    127734
+   ],
+   [
+    1506
+   ]
+  ]
+ },
+ "Referenz: letztes Brutjahr (Jahrzehnte)": {
+  "columns": [
+   "rows"
+  ],
+  "index": [
+   "bis 1999",
+   "2000-2009",
+   "2010-2019",
+   "ab 2020"
+  ],
+  "data": [
+   [
+    5433
+   ],
+   [
+    3542
+   ],
+   [
+    32524
+   ],
+   [
+    87741
+   ]
+  ]
+ },
+ "Referenz: Arten pro Quadrat": {
+  "columns": [
+   "value"
+  ],
+  "index": [
+   "count",
+   "mean",
+   "std",
+   "min",
+   "25%",
+   "50%",
+   "75%",
+   "max"
+  ],
+  "data": [
+   [
+    1684.0
+   ],
+   [
+    76.7
+   ],
+   [
+    26.7
+   ],
+   [
+    1.0
+   ],
+   [
+    68.0
+   ],
+   [
+    82.0
+   ],
+   [
+    93.0
+   ],
+   [
+    138.0
+   ]
+  ]
+ },
+ "Referenz: doppelte Art/Quadrat-Paare": {
+  "columns": [
+   "duplicates"
+  ],
+  "index": [
+   0
+  ],
+  "data": [
+   [
+    0
+   ]
+  ]
+ },
+ "Arealstatistik: Hektaren pro 5-km-Quadrat": {
+  "columns": [
+   "value"
+  ],
+  "index": [
+   "count",
+   "mean",
+   "std",
+   "min",
+   "25%",
+   "50%",
+   "75%",
+   "max"
+  ],
+  "data": [
+   [
+    1839.0
+   ],
+   [
+    2245.3
+   ],
+   [
+    639.7
+   ],
+   [
+    1.0
+   ],
+   [
+    2500.0
+   ],
+   [
+    2500.0
+   ],
+   [
+    2500.0
+   ],
+   [
+    2500.0
+   ]
+  ]
+ },
+ "landuse": {
+  "cells": 1839,
+  "below_1000_ha": 169
+ },
+ "cells": {
+  "reference": 1645,
+  "without_landuse": 0,
+  "below_1000_ha": 8
+ },
+ "Plattformen: Meldungen mit Art aus der Referenz": {
+  "columns": [
+   "records",
+   "species_in_reference_pct"
+  ],
+  "index": [
+   "ebird",
+   "inaturalist",
+   "observation_org"
+  ],
+  "data": [
+   [
+    558034,
+    96.6
+   ],
+   [
+    25703,
+    94.2
+   ],
+   [
+    21839,
+    95.5
+   ]
+  ]
+ },
+ "Erste Abdeckung (Anteil Art/Quadrat-Paare der Referenz mit Meldung, %)": {
+  "columns": [
+   "coverage_pct",
+   "reference_pairs"
+  ],
+  "index": [
+   "ebird",
+   "inaturalist",
+   "observation_org",
+   "any"
+  ],
+  "data": [
+   [
+    34.0,
+    127269
+   ],
+   [
+    5.2,
+    127269
+   ],
+   [
+    4.4,
+    127269
+   ],
+   [
+    36.2,
+    127269
+   ]
+  ]
+ },
+ "Abdeckungsquote pro Quadrat (alle drei), Verteilung": {
+  "columns": [
+   "value"
+  ],
+  "index": [
+   "count",
+   "mean",
+   "std",
+   "min",
+   "25%",
+   "50%",
+   "75%",
+   "max"
+  ],
+  "data": [
+   [
+    1637.0
+   ],
+   [
+    33.0
+   ],
+   [
+    25.4
+   ],
+   [
+    0.0
+   ],
+   [
+    8.4
+   ],
+   [
+    30.3
+   ],
+   [
+    53.6
+   ],
+   [
+    100.0
+   ]
+  ]
+ },
+ "Abdeckung nach letztem Brutjahr der Referenz": {
+  "columns": [
+   "reference_pairs",
+   "ebird_pct",
+   "inaturalist_pct",
+   "observation_org_pct",
+   "any_pct"
+  ],
+  "index": [
+   "bis 1999",
+   "2000-2009",
+   "2010-2019",
+   "ab 2020"
+  ],
+  "data": [
+   [
+    5301.0,
+    7.5,
+    1.1,
+    0.6,
+    8.6
+   ],
+   [
+    3436.0,
+    8.8,
+    1.5,
+    0.5,
+    9.8
+   ],
+   [
+    32002.0,
+    15.9,
+    1.8,
+    1.7,
+    17.7
+   ],
+   [
+    86530.0,
+    43.3,
+    6.8,
+    5.8,
+    45.8
+   ]
+  ]
+ },
+ "Abdeckung je Koordinatenschwelle (iNaturalist)": {
+  "columns": [
+   "inaturalist_records",
+   "ebird_pct",
+   "inaturalist_pct",
+   "observation_org_pct"
+  ],
+  "index": [
+   "ohne Schwelle",
+   "iNat > 5000 m entfernt",
+   "iNat > 2500 m entfernt",
+   "iNat > 1000 m entfernt"
+  ],
+  "data": [
+   [
+    25703.0,
+    34.03,
+    5.15,
+    4.42
+   ],
+   [
+    23481.0,
+    34.03,
+    4.62,
+    4.42
+   ],
+   [
+    23250.0,
+    34.03,
+    4.56,
+    4.42
+   ],
+   [
+    22497.0,
+    34.03,
+    4.36,
+    4.42
+   ]
+  ]
+ }
+}

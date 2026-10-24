@@ -1,5 +1,9 @@
 .venv/
 data/
 .DS_Store
-storage_test_out/
-profile_out/
+__pycache__/
+# Testdateien der Storage-Evaluation sind gross und reproduzierbar; das Messprotokoll bleibt.
+storage_test_out/*
+!storage_test_out/storage_test.json
+# Sensitivitaetslaeufe: Datenbanken und Tabellen sind reproduzierbar, die Testergebnisse bleiben.
+build_out_sens_*/

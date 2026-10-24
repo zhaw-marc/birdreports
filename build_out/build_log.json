@@ -1,41 +1,45 @@
 {
- "gestartet": "2026-10-18 11:31:41",
- "eingaben": {
-  "arealstatistik": "data/ag-b-00/ag-b-00.03-37-area-current-csv.csv",
-  "plattformen": "data/0024005-260928105237408.csv",
-  "referenz": "data/dwca-soi_aves-v1/occurrence.txt",
+ "started": "2026-10-20 14:41:25",
+ "inputs": {
+  "landuse": "data/ag-b-00/ag-b-00.03-37-area-current-csv.csv",
+  "platforms": "data/0024005-260928105237408.csv",
+  "reference": "data/dwca-soi_aves-v1/occurrence.txt",
   "taxon_mapping": "mappings/taxon_mapping.csv"
  },
- "parameter": {
-  "raster_m": 5000,
-  "jahre": [
+ "parameters": {
+  "grid_size_m": 5000,
+  "years": [
    2020,
    2024
   ],
-  "brutzeit_monate": [
+  "breeding_months": [
    4,
    7
   ],
-  "min_hektaren": 1000,
-  "ausgeschlossene_unsicherheit_m": 7070
+  "min_hectares": 1000,
+  "excluded_uncertainty_m": 7070,
+  "min_breeding_year": 2020,
+  "max_uncertainty_inaturalist_m": 2500
  },
- "plattform_zeilen_nach_filter": 605578,
- "plattform_ausserhalb_bbox": 2,
- "plattform_zeilen_bereinigt": 605576,
- "referenz_zeilen_ch": 129240,
- "referenz_umbenannte_arten": 16,
- "referenz_paare_bereinigt": 129240,
- "referenz_paare_10km": 1506,
- "referenz_arten": 213,
- "landnutzung_quadrate": 1839,
- "landnutzung_quadrate_unter_schwelle": 169,
- "analyse_quadrate_gesamt": 1839,
- "analyse_quadrate_hauptanalyse": 1637,
- "analyse_referenzpaare_hauptanalyse": 127269,
- "abdeckung_ebird_mittel_prozent": 30.5,
- "abdeckung_inaturalist_mittel_prozent": 4.7,
- "abdeckung_observation_org_mittel_prozent": 4.2,
- "abdeckung_alle_drei_mittel_prozent": 33.0,
- "analysedatenbank_mb": 18.9,
- "beendet": "2026-10-18 11:31:47"
+ "platform_rows_after_filter": 605578,
+ "inaturalist_rows_too_uncertain": 2455,
+ "platform_outside_bbox": 0,
+ "platform_rows_clean": 603123,
+ "reference_rows_ch": 129240,
+ "reference_renamed_species": 16,
+ "reference_pairs_clean": 129240,
+ "reference_pairs_10km": 1506,
+ "reference_species": 213,
+ "landuse_cells": 1839,
+ "landuse_cells_below_threshold": 169,
+ "reference_pairs_before_min_year": 41499,
+ "analysis_cells_total": 1839,
+ "analysis_cells_main": 1614,
+ "analysis_reference_pairs_main": 86530,
+ "coverage_ebird_mean_percent": 37.2,
+ "coverage_inaturalist_mean_percent": 5.2,
+ "coverage_observation_org_mean_percent": 5.5,
+ "coverage_any_mean_percent": 39.9,
+ "analysis_database_mb": 18.9,
+ "finished": "2026-10-20 14:41:30"
 }

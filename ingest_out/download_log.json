@@ -1,0 +1,28 @@
+{
+ "runs": [
+  {
+   "started": "2026-10-18T12:10:13+0200",
+   "python": "3.14.7",
+   "sources": {
+    "platforms": {
+     "status": "present",
+     "key": "0024005-260928105237408",
+     "doi": "10.15468/dl.9qfxn7",
+     "path": "data/0024005-260928105237408.csv",
+     "bytes": 826413319
+    },
+    "reference": {
+     "status": "present",
+     "doi": "10.15468/jujcgr",
+     "path": "data/dwca-soi_aves-v1"
+    },
+    "landuse": {
+     "status": "present",
+     "asset": "ag-b-00.03-37-area-current-csv",
+     "path": "data/ag-b-00"
+    }
+   },
+   "finished": "2026-10-18T12:10:13+0200"
+  }
+ ]
+}

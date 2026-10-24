@@ -7,11 +7,12 @@ Bewertungsraster `DAENG_LNW1_2_Bewertungsraster_Projekte_2026.xlsx`.
 Abgabe: 27.10.2026, 23:59 Uhr (Abgabe-Branch auf GitHub). Kolloquium: 28.10.2026, 18:00, SW 111.
 Verbleibend: 9 Tage.
 
-> **Stand 18.10.2026, nachgeführt:** Die Schritte 4, 6 und 7 der Liste am Ende sind umgesetzt —
+> **Stand 18.10.2026, nachgeführt:** Die Schritte 4, 6, 7 und 9 der Liste am Ende sind umgesetzt:
 > `requirements.txt` enthält scipy und statsmodels, `src/build_analysis_table.py` schreibt die
 > bereinigten Tabellen und die Analysetabelle, `src/hypothesis_tests.py` testet H1 bis H3 inklusive
-> Holm-Korrektur, Konfidenzintervallen und Moran's I. Ergebnisse siehe README. Die übrigen
-> Blocker (Git-Abgabe, Notebook, Präsentation, Download-Skript) stehen unverändert offen.
+> Holm-Korrektur, Konfidenzintervallen und Moran's I, und `src/download_data.py` bezieht die drei
+> Rohquellen mit Protokoll (Datum, URL, DOI, Prüfsumme). Ergebnisse siehe README. Die übrigen
+> Blocker (Git-Abgabe, Notebook, Präsentation) stehen unverändert offen.
 
 ## Wie bewertet wird
 
@@ -56,13 +57,13 @@ schon, und die sind klein:
 
 - Analysetabelle pro Quadrat (ca. 1'800 Zeilen × ~12 Spalten) — wenige hundert KB
 - `profile_out/profile.json` und `storage_test_out/storage_test.json` — Messbelege
-- `storage_test_out/plattform.parquet` (26,5 MB) und `test.duckdb` (46,9 MB) — unter 100 MB, also
+- `storage_test_out/platform.parquet` (26,5 MB) und `test.duckdb` (46,7 MB) — unter 100 MB, also
   committebar; empfehlenswert ist mindestens die DuckDB-Analysedatenbank, weil das Raster unter
   «Artefakte (Codes, **Datenbanken**)» explizit Datenbanken nennt.
 
 Konkret: `.gitignore` auf `data/` beschränken, Ergebnisordner wieder aufnehmen.
 
-### 3. Das Download-Skript existiert nicht
+### 3. ~~Das Download-Skript existiert nicht~~ (erledigt am 18.10.2026)
 
 Die Konzeption verspricht «Download-Skript mit Datum und DOI im Log, Search-API als Fallback»,
 und der offene Punkt 1 stützt die Abgabe der Daten gerade darauf, dass dieses Skript die Rohdaten
@@ -216,14 +217,15 @@ Lücken:
   nicht in `requirements.txt`, Tests existieren nicht. Drei Tests reichen, um das Versprechen zu
   halten: Quadrat-ID aus bekannten LV95-Koordinaten, Abdeckungsquote auf einem Mini-Beispiel,
   Landnutzungsanteile summieren auf 1.
-- **Beobachter-IDs werden nicht gehasht.** Konzeption, README und Unterströmung «Security» sagen
+- ~~**Beobachter-IDs werden nicht gehasht.**~~ (erledigt am 18.10.2026: `build_analysis_table.py`
+  hasht vor dem Schreiben, `profile_data.py` gibt nur noch Anteile statt Namen aus.) Konzeption, README und Unterströmung «Security» sagen
   zu, `recordedBy` vor dem Speichern zu hashen. `profile_data.py` liest die Spalte im Klartext und
   gibt am Ende die Top-5-Beobachteranteile von Observation.org auf die Konsole aus
   (`oj.recordedBy.value_counts(...)`). Bei GBIF-eBird stehen dort teilweise Klarnamen. Das ist der
   einzige Punkt, bei dem das Repo der eigenen Zusage widerspricht — und er betrifft
   *Kohärenz* und die Unterströmung Security direkt. Fix: Hashen in `add_cell`-Nähe ziehen, nur
   noch Hashes und Anzahlen ausgeben.
-- **Stale Docstring:** `profile_data.py` behauptet «NICHT an den echten Daten getestet», aber
+- ~~**Stale Docstring:**~~ (erledigt) `profile_data.py` behauptet «NICHT an den echten Daten getestet», aber
   `profile_out/profile.json` enthält Ergebnisse aus einem echten Lauf. Kleinigkeit, aber ein
   Prüfender liest den Docstring zuerst.
 - **Nicht implementierte Sensitivitätsanalysen:** Verteilung der 7'070-m-Meldungen auf die vier
@@ -243,11 +245,11 @@ Nach Wirkung pro Aufwand sortiert:
 | 2 | Mail an Frau Rothstein (FS26-Themenbereich) | 10 min | Blocker |
 | 3 | `.gitignore` korrigieren, Ergebnisartefakte versionieren | 20 min | Blocker |
 | 4 | ~~`scipy`/`statsmodels` in `requirements.txt`~~ (erledigt; `pytest` folgt mit Schritt 10) | 5 min | Voraussetzung |
-| 5 | Beobachter-Hashing + Docstring korrigieren | 30 min | Kohärenz/Security |
+| 5 | ~~Beobachter-Hashing + Docstring korrigieren~~ (erledigt) | 30 min | Kohärenz/Security |
 | 6 | ~~Bereinigungsschritt + Analysetabelle pro Quadrat schreiben~~ (erledigt: `src/build_analysis_table.py`) | 0,5 Tag | Blocker |
 | 7 | ~~Hypothesentests H1–H3 inkl. Holm, CI, Moran's I~~ (erledigt: `src/hypothesis_tests.py`) | 1,5 Tage | Blocker |
 | 8 | Notebook als Serving-Artefakt mit Zitaten | 1 Tag | Blocker |
-| 9 | Download-Skript mit DOI und Datum im Log | 0,5 Tag | Ingestion-Artefakt |
+| 9 | ~~Download-Skript mit DOI und Datum im Log~~ (erledigt: `src/download_data.py`) | 0,5 Tag | Ingestion-Artefakt |
 | 10 | Drei Tests für die Transformationsschritte | 2–3 h | Funktionalität |
 | 11 | Makefile als Orchestrierung | 30 min | Unterströmung |
 | 12 | Konzeption ergänzen: Quellsystem-Evaluation, Datentypen, REST/Pull/Batch, CDC-Begründung | 0,5 Tag | Ingestion |
